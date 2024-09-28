@@ -68,6 +68,19 @@ class User(AbstractBaseUser, PermissionsMixin):
     USERNAME_FIELD = 'email'
     # REQUIRED_FIELDS = ['email']
 
+    def save(self, *args, **kwargs):
+        # Check if the user is being created for the first time (i.e., doesn't have a primary key yet)
+        is_new = self.pk is None
+
+        # First, save the user to generate the primary key if it's a new user
+        super().save(*args, **kwargs)
+
+        # Now that the user has been saved, we can create the ChatRoom
+        if is_new:
+            from Chat.models import ChatRoom
+            ChatRoom.objects.create(user=self)
+
+
 class PasswordResetCode(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     code = models.CharField(max_length=6)

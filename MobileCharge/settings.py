@@ -13,6 +13,7 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 from pathlib import Path
 from datetime import timedelta
 import os
+import cloudinary_storage
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -39,9 +40,12 @@ INSTALLED_APPS = [
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
+    'cloudinary_storage',
     'django.contrib.staticfiles',
+     'cloudinary',
     'rest_framework',
     'Authentication',
+    
     'drf_yasg',
     'rest_framework_simplejwt',
     'rest_framework_simplejwt.token_blacklist',
@@ -113,7 +117,7 @@ ROOT_URLCONF = 'MobileCharge.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': ['templates'],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -181,7 +185,7 @@ USE_TZ = True
 
 STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR,  'staticfiles')
-STATICFILES_STORAGE = "whitenoise.storage.CompresedManifestStaticFilesStorage"
+# STATICFILES_STORAGE = "whitenoise.storage.CompresedManifestStaticFilesStorage"
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
@@ -199,8 +203,8 @@ EMAIL_HOST_PASSWORD = 'qqlf vvut qgze alwz'
 
 
 CLOUDINARY_STORAGE = {
-    'CLOUD_NAME': "dbkdefjag",
-    'API_KEY': "978975324158431",
-    'API_SECRET': "CdqHSgZyQq7Ribv_jg-Xm1artvU"
+    'CLOUD_NAME': "dqathrf7e",
+    'API_KEY': "138123479911378",
+    'API_SECRET': "II8QnQT61Gx-KTHEvt1Ef6ewRPE"
 }
 DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'

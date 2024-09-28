@@ -10,4 +10,5 @@ urlpatterns = [
     path('verify-reset-code/', views.VerifyResetCode, name='verify_reset_code'),
     path('reset-password/', views.ResetPassword, name='reset_password'),
     path('update-profile/', views.ProfileSetting, name='profile_setting'),
+    path('get-user-info/', views.GetUserInfo, name='get_user_info'),
 ]

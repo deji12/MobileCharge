@@ -97,16 +97,20 @@ def Register(request):
 
     # generate new access and refresh tokens 
     tokens = new_user.tokens()
+    user_serializer = UserInfoSerializer(new_user)
 
     response = {
         "success": "Account created successfully",
-        "tokens": tokens
+        "user": user_serializer.data,
+        "tokens": tokens,
     }
+
+    # add the user profile image to the response
+    response["user"]["profile_image"] = new_user.profile_image_url()
 
     return Response(response, status=status.HTTP_201_CREATED)
 
 class MyTokenObtainPairView(TokenObtainPairView):
-
     serializer_class = TokenObtainPairSerializer
 
     @swagger_auto_schema(
@@ -118,6 +122,21 @@ class MyTokenObtainPairView(TokenObtainPairView):
                     properties={
                         'access': openapi.Schema(type=openapi.TYPE_STRING, description='Access token'),
                         'refresh': openapi.Schema(type=openapi.TYPE_STRING, description='Refresh token'),
+                        'user': openapi.Schema(
+                            type=openapi.TYPE_OBJECT,
+                            properties={
+                                'id': openapi.Schema(type=openapi.TYPE_INTEGER, description='User ID'),
+                                'username': openapi.Schema(type=openapi.TYPE_STRING, description='Username'),
+                                'email': openapi.Schema(type=openapi.TYPE_STRING, description='Email'),
+                                'first_name': openapi.Schema(type=openapi.TYPE_STRING, description='First Name'),
+                                'last_name': openapi.Schema(type=openapi.TYPE_STRING, description='Last Name'),
+                                'phone': openapi.Schema(type=openapi.TYPE_STRING, description='Phone Number'),
+                                # 'vehicle_type': openapi.Schema(type=openapi.TYPE_STRING, description='Vehicle Type'),
+                                'is_active': openapi.Schema(type=openapi.TYPE_BOOLEAN, description='Is Active'),
+                                'is_superuser': openapi.Schema(type=openapi.TYPE_BOOLEAN, description='Is Superuser'),
+                                'date_joined': openapi.Schema(type=openapi.TYPE_STRING, format='date-time', description='Date Joined')
+                            }
+                        )
                     }
                 )
             ),
@@ -138,22 +157,28 @@ class MyTokenObtainPairView(TokenObtainPairView):
 
         # Authenticate user with provided credentials
         user = authenticate(request, username=email, password=password)
-        
+
         # Check if user is authenticated and active
         if user is None:
             return Response({"error": "Invalid credentials"}, status=status.HTTP_401_UNAUTHORIZED)
 
         if not user.is_active:
             return Response({"error": "Account is inactive. Please verify your email to activate your account."}, status=status.HTTP_401_UNAUTHORIZED)
-        
+
         # Proceed with the parent method to handle token generation
         try:
             response = super().post(request, *args, **kwargs)
         except TokenError as e:
             raise InvalidToken(e.args[0])
+
+        # Add user details to the response
+        user_serializer = UserInfoSerializer(user)
+        response.data['user'] = user_serializer.data
+
+        response.data["user"]["profile_image"] = user.profile_image_url()
         
-        # return tokens
         return response
+
 
 class MyTokenRefreshView(TokenRefreshView):
     serializer_class = TokenRefreshSerializer
@@ -195,7 +220,40 @@ class MyTokenRefreshView(TokenRefreshView):
     )
     def post(self, request, *args, **kwargs):
         return super().post(request, *args, **kwargs) 
-    
+
+@swagger_auto_schema(
+    method='get',
+    responses={
+        200: openapi.Response(
+            description="User information retrieved successfully",
+            schema=UserInfoSerializer
+        ),
+        401: openapi.Response(
+            description="Unauthorized",
+            schema=openapi.Schema(
+                type=openapi.TYPE_OBJECT,
+                properties={
+                    'detail': openapi.Schema(type=openapi.TYPE_STRING, description="Error detail"),
+                },
+                example={
+                    "detail": "Authentication credentials were not provided."
+                }
+            )
+        ),
+    },
+    operation_description="Retrieve the current authenticated user's information.",
+    operation_summary="Get User Info",
+)
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def GetUserInfo(request):
+    user = request.user
+    serializer = UserInfoSerializer(user)
+
+    response_data = serializer.data
+    response_data["profile_image"] = user.profile_image_url()
+    return Response(response_data)    
+ 
 @swagger_auto_schema(
     method='post',
     request_body=openapi.Schema(

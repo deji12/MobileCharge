@@ -7,8 +7,10 @@ class ChatRoom(models.Model):
     date = models.DateTimeField(auto_now_add=True)
 
     def get_messages(self):
-
         return Message.objects.filter(chat_room=self)
+    
+    def get_last_message(self):
+        return Message.objects.filter(chat_room=self).order_by('-date_and_time_of_message_send').first()
 
 class Message(models.Model):
 

@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <title>Messages</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js" integrity="sha512-894YE6QWD5I59HgZOGReFYm4dnWc1Qt5NtvYSaNcOP+u1T9qYdvdihz0PPSiiqn/+/3e7Jo4EaG7TubfWGUrMQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+</head>
+
+<body>
+    <div id="chatContainer">
+        <div class="message"></div>
+    </div>
+    
+    <!-- Message Form -->
+    <form id="messageForm">
+        <input type="text" id="messageInput" placeholder="Enter your message" required>
+        <input type="file" id="imageInput" accept="image/*">
+        <button id="send">Send message</button>
+    </form>
+
+</body>
+
+<script>
+    function scrollToBottom() {
+        var chatContainer = document.getElementById("chatContainer");
+        chatContainer.scrollTop = chatContainer.scrollHeight;
+    }
+
+    const websocketProtocol = window.location.protocol === "https:" ? "wss" : "ws";
+    const wsEndpoint = `${websocketProtocol}://${window.location.host}/ws/message/1/`;
+    const socket = new WebSocket(wsEndpoint);
+
+    document.getElementById('messageForm').addEventListener('submit', function(event){
+        event.preventDefault();
+
+        let message = document.getElementById('messageInput').value;
+        let imageFile = document.getElementById('imageInput').files[0];  // Grab the selected image file if available
+        let reader = new FileReader();
+
+        // Function to handle sending the message and image (if present) together
+        function sendMessageWithImage(imageData = null) {
+            const payload = {
+                'room_id': '1',
+                'sender_id': '1',
+                'message': message,
+                'image': imageData // Include image data if available
+            };
+            socket.send(JSON.stringify(payload));
+        }
+
+        // If an image is selected, read it as a base64 string, then send message + image together
+        if (imageFile) {
+            reader.onload = function(e) {
+                sendMessageWithImage(e.target.result);  // Pass the base64 image string
+            };
+            reader.readAsDataURL(imageFile);  // Convert image to base64
+        } else {
+            sendMessageWithImage();  // No image, just send the message
+        }
+
+        // Clear form fields after sending
+        document.getElementById('messageInput').value = '';
+        document.getElementById('imageInput').value = '';
+    });
+
+    // Handle WebSocket responses from the backend
+    socket.addEventListener("message", (event) => {
+        const messageData = JSON.parse(event.data)['message'];
+        console.log(messageData);
+        
+        var sender = messageData['sender'];
+        var message = messageData['message'];
+        var image = messageData['image'];  // Handle image if present
+
+        var messageDiv = document.querySelector('.message');
+        let messageHTML = '';
+
+        if (sender != '{{user}}') {  // assuming you have a variable `currentUser` to hold the current user's ID or name
+            messageHTML += '<div class="receive"><p style="color: #000;">' + message + '<strong> -' + sender + '</strong></p></div>';
+        } else {
+            messageHTML += '<div class="send"><p style="color: #000;">' + message + '</p></div>';
+        }
+
+        // If there is an image, append it to the message
+        if (image) {
+            messageHTML += '<div><img src="' + image + '" style="max-width: 200px; height: auto;" /></div>';
+        }
+
+        messageDiv.innerHTML += messageHTML;  // Add message + image together
+        scrollToBottom();
+    });
+
+    socket.onopen = (event) => {
+        console.log("WebSocket connection opened!");
+    };
+
+    socket.onclose = (event) => {
+        console.log("WebSocket connection closed!");
+    };
+
+</script>
+
+</html>
