@@ -15,6 +15,7 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from .utils import send_password_reset_code
 from django.contrib.auth import authenticate
 from rest_framework_simplejwt.exceptions import InvalidToken, TokenError
+from Helper.utils import upload_image_to_cloudinary_and_get_url
 
 @swagger_auto_schema(
     method='post',
@@ -93,7 +94,7 @@ def Register(request):
     new_user.set_password(password)
 
     if profile_image:
-        new_user.profile_image = profile_image
+        new_user.profile_image = upload_image_to_cloudinary_and_get_url(profile_image)
 
     # generate new access and refresh tokens 
     tokens = new_user.tokens()
