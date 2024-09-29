@@ -144,6 +144,33 @@ def get_bookings(self):
 
     return Response(serializer.data, status=status.HTTP_200_OK)
 
+@swagger_auto_schema(
+    method='get',
+    operation_description="Retrieve detailed information for a specific booking by its ID.",
+    responses={
+        200: openapi.Response(
+            description="Booking retrieved successfully",
+            schema=BookingSerializer()
+        ),
+        404: openapi.Response(
+            description="Booking not found",
+            examples={
+                "application/json": {
+                    "error": "Booking with id: '1' not found."
+                }
+            }
+        )
+    },
+    manual_parameters=[
+        openapi.Parameter(
+            'booking_id',
+            openapi.IN_PATH,
+            description="ID of the booking to retrieve",
+            type=openapi.TYPE_INTEGER,
+            required=True
+        )
+    ]
+)
 @permission_classes([IsAuthenticated])
 @api_view(["GET"])
 def get_booking(request, booking_id):
