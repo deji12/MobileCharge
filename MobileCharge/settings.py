@@ -30,7 +30,7 @@ DEBUG = True
 ALLOWED_HOSTS = ['*']
 
 CORS_ALLOWED_ORIGINS = [
-    'http://localhost:3000',  # Your frontend domain
+    'http://localhost:3000',  'https://ev-charging-site.vercel.app'
 ]
 CORS_ALLOW_ALL_ORIGINS = True
 CORS_ALLOW_CREDENTIALS = True
