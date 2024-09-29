@@ -71,10 +71,6 @@ def Register(request):
     if not (email and phone and password and confirm_password and first_name and last_name):
         return Response({"error": "All fields are required"}, status=status.HTTP_400_BAD_REQUEST)
     
-    # check if user with email exists
-    if User.objects.filter(email=email).exists():
-        return Response({"error": "Email already exists"}, status=status.HTTP_400_BAD_REQUEST)
-
     # Check if passwords match
     if password != confirm_password:
         return Response({"error": "Passwords do not match"}, status=status.HTTP_400_BAD_REQUEST)
@@ -82,6 +78,10 @@ def Register(request):
     # check password length
     if len(password) <= 5:
         return Response({"error": "Password must be greater than 5 characters"}, status=status.HTTP_400_BAD_REQUEST)
+    
+    # check if user with email exists
+    if User.objects.filter(email=email).exists():
+        return Response({"error": "Email already exists"}, status=status.HTTP_400_BAD_REQUEST)
     
     # create user account
     new_user = User(
@@ -96,6 +96,8 @@ def Register(request):
     if profile_image:
         new_user.profile_image = upload_image_to_cloudinary_and_get_url(profile_image)
 
+    new_user.save()
+
     # generate new access and refresh tokens 
     tokens = new_user.tokens()
     user_serializer = UserInfoSerializer(new_user)
@@ -105,9 +107,6 @@ def Register(request):
         "user": user_serializer.data,
         "tokens": tokens,
     }
-
-    # add the user profile image to the response
-    response["user"]["profile_image"] = new_user.profile_image_url()
 
     return Response(response, status=status.HTTP_201_CREATED)
 
