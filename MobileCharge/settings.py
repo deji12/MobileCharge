@@ -13,7 +13,6 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 from pathlib import Path
 from datetime import timedelta
 import os
-import cloudinary_storage
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -40,9 +39,9 @@ INSTALLED_APPS = [
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
+    'cloudinary',
     'cloudinary_storage',
     'django.contrib.staticfiles',
-     'cloudinary',
     'rest_framework',
     'Authentication',
     
@@ -201,10 +200,6 @@ EMAIL_USE_SSL = True
 EMAIL_HOST_USER = 'adesolaayodeji53@gmail.com'
 EMAIL_HOST_PASSWORD = 'qqlf vvut qgze alwz'
 
-
-CLOUDINARY_STORAGE = {
-    'CLOUD_NAME': "dqathrf7e",
-    'API_KEY': "138123479911378",
-    'API_SECRET': "II8QnQT61Gx-KTHEvt1Ef6ewRPE"
-}
-DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
+CLOUDINARY_CLOUD_NAME = "dqathrf7e"
+CLOUDINARY_API_KEY = "138123479911378"
+CLOUDINARY_API_SECRET = "II8QnQT61Gx-KTHEvt1Ef6ewRPE"

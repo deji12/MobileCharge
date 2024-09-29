@@ -475,7 +475,7 @@ def ResetPassword(request):
     
 
 @swagger_auto_schema(
-    method='post',
+    method='PATCH',
     operation_description="Update user profile settings including username, email, phone, password, and profile image.",
     request_body=openapi.Schema(
         type=openapi.TYPE_OBJECT,
@@ -509,7 +509,7 @@ def ResetPassword(request):
         )
     }
 )
-@api_view(["POST"])
+@api_view(["PATCH"])
 @permission_classes([IsAuthenticated])
 def ProfileSetting(request):
 

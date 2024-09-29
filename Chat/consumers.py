@@ -4,6 +4,7 @@ from channels.db import database_sync_to_async
 from Chat.models import *
 import base64
 from django.core.files.base import ContentFile
+from Helper.utils import upload_image_to_cloudinary_and_get_url
 
 class ChatConsumer(AsyncWebsocketConsumer):
     async def connect(self):
@@ -58,7 +59,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
                 format, imgstr = image_data.split(';base64,')  # Split the base64 string
                 ext = format.split('/')[-1]  # Extract image extension
                 image_file = ContentFile(base64.b64decode(imgstr), name=f'{sender_id}_{room_id}.{ext}')
-                new_message.image = image_file
+                new_message.image = upload_image_to_cloudinary_and_get_url(image_file)
                 new_message.contains_image = True
             new_message.save()  
         

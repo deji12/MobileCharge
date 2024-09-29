@@ -18,5 +18,5 @@ class Message(models.Model):
     sender = models.ForeignKey(User, on_delete=models.CASCADE, related_name="sender")
     content = models.TextField(null=True, blank=True)
     contains_image = models.BooleanField(default=False)
-    image = models.FileField(upload_to='images/chat', null=True, blank=True)
+    image = models.URLField(null=True, blank=True)
     date_and_time_of_message_send = models.DateTimeField(auto_now_add=True)
