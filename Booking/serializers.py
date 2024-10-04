@@ -4,6 +4,7 @@ from Authentication.serializers import UserInfoSerializer
 
 class BookingSerializer(ModelSerializer):
     user = UserInfoSerializer()
+    driver = UserInfoSerializer()
     
     class Meta:
         model = Booking

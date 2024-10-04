@@ -176,7 +176,7 @@ class MyTokenObtainPairView(TokenObtainPairView):
         user_serializer = UserInfoSerializer(user)
         response.data['user'] = user_serializer.data
 
-        response.data["user"]["profile_image"] = user.profile_image_url()
+        # response.data["user"]["profile_image"] = user.profile_image_url()
         
         return response
 

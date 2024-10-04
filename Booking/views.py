@@ -31,48 +31,12 @@ from Driver.models import Driver
     responses={
         201: openapi.Response(
             description="Booking created successfully",
-            schema=openapi.Schema(
-                type=openapi.TYPE_OBJECT,
-                properties={
-                    'message': openapi.Schema(type=openapi.TYPE_STRING, description='Success message'),
-                    'booking': openapi.Schema(
-                        type=openapi.TYPE_OBJECT,
-                        properties={
-                            'id': openapi.Schema(type=openapi.TYPE_INTEGER, description='Booking ID'),
-                            'location': openapi.Schema(type=openapi.TYPE_STRING, description='Booking location'),
-                            'car_make': openapi.Schema(type=openapi.TYPE_STRING, description='Car make'),
-                            'battery_type': openapi.Schema(type=openapi.TYPE_STRING, description='Battery type'),
-                            'battery_level': openapi.Schema(type=openapi.TYPE_INTEGER, description='Battery level'),
-                            'kilometers_left': openapi.Schema(type=openapi.TYPE_NUMBER, description='Kilometers left'),
-                            'date': openapi.Schema(type=openapi.TYPE_STRING, format='date-time', description='Booking creation date'),
-                            'vehicle_image': openapi.Schema(type=openapi.TYPE_STRING, description='Vehicle image URL'),
-                            'description': openapi.Schema(type=openapi.TYPE_STRING, description='Booking description'),
-                            'booking_type': openapi.Schema(type=openapi.TYPE_STRING, description='Booking type'),
-                            'status': openapi.Schema(type=openapi.TYPE_STRING, description='Booking status'),
-                            'user': openapi.Schema(  # Nested UserInfoSerializer schema
-                                type=openapi.TYPE_OBJECT,
-                                properties={
-                                    'id': openapi.Schema(type=openapi.TYPE_INTEGER, description='User ID'),
-                                    'username': openapi.Schema(type=openapi.TYPE_STRING, description='Username'),
-                                    'email': openapi.Schema(type=openapi.TYPE_STRING, description='User email'),
-                                    'first_name': openapi.Schema(type=openapi.TYPE_STRING, description='First name'),
-                                    'last_name': openapi.Schema(type=openapi.TYPE_STRING, description='Last name'),
-                                    'phone': openapi.Schema(type=openapi.TYPE_STRING, description='Phone number'),
-                                    'is_active': openapi.Schema(type=openapi.TYPE_BOOLEAN, description='Is active'),
-                                    'is_superuser': openapi.Schema(type=openapi.TYPE_BOOLEAN, description='Is superuser'),
-                                    'date_joined': openapi.Schema(type=openapi.TYPE_STRING, format='date-time', description='Date joined'),
-                                    'profile_image_url': openapi.Schema(type=openapi.TYPE_STRING, description='Profile image URL')
-                                }
-                            ),
-                            'driver_name': openapi.Schema(type=openapi.TYPE_STRING, description='Driver name'),
-                        }
-                    ),
-                }
-            )
+            schema=BookingSerializer()
         ),
         400: openapi.Response(description="Bad request. Missing required fields."),
         401: openapi.Response(description="Unauthorized. User not authenticated."),
-    }
+    },
+    operation_summary = "Create Booking"
 )
 @permission_classes([IsAuthenticated])
 @api_view(["POST"])
@@ -130,7 +94,6 @@ def create_booking(request):
     response = {
         "message": "Booking created successfully",
         "booking": serializer.data,
-        "driver_name": driver.user.get_full_name()
     }
     return Response(response, status=status.HTTP_201_CREATED)
 
@@ -143,7 +106,8 @@ def create_booking(request):
             schema=BookingSerializer(many=True)
         ),
         401: openapi.Response(description="Unauthorized"),
-    }
+    },
+    operation_summary = "List bookings"
 )
 @permission_classes([IsAuthenticated])
 @api_view(["GET"])
@@ -171,6 +135,7 @@ def get_bookings(self):
             }
         )
     },
+    operation_summary = "Get booking",
     manual_parameters=[
         openapi.Parameter(
             'booking_id',
@@ -190,4 +155,57 @@ def get_booking(request, booking_id):
         serializer = BookingSerializer(booking)
         return Response(serializer.data, status=status.HTTP_200_OK)
     except:
+        return Response({"error": f"Booking with id: '{booking_id}' not found."}, status=status.HTTP_404_NOT_FOUND)
+
+@swagger_auto_schema(
+    method='patch',
+    operation_description="Update the status of a booking",
+    request_body=BookingSerializer,  # Pass the BookingSerializer directly
+    responses={
+        200: openapi.Response(
+            description="Booking status updated successfully",
+            examples={
+                "application/json": {
+                    "message": "Booking status updated successfully",
+                    "booking": {
+                        "id": 1,
+                        "status": "confirmed",
+                        # Other fields from BookingSerializer
+                    },
+                    "driver_name": "John Doe"
+                }
+            },
+        ),
+        400: openapi.Response(description="Invalid request (e.g., status not provided)"),
+        404: openapi.Response(description="Booking not found"),
+    },
+    tags=["Bookings"],  # Group this under 'Bookings' in the API docs
+    operation_summary="Update booking status"
+)   
+@permission_classes([IsAuthenticated])
+@api_view(["PATCH"])
+def update_booking_status(request, booking_id):
+    
+    try:
+        booking = Booking.objects.get(id=booking_id)
+
+        new_status = request.data.get("status")
+
+        if not new_status:
+            return Response({"error": "Status is required"}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Update the status field of the booking
+        booking.status = new_status
+        booking.save()
+
+        serializer = BookingSerializer(booking)
+        response = {
+            "message": "Booking status updated successfully",
+            "booking": serializer.data,
+            "driver_name": booking.driver.user.get_full_name()
+        }
+        return Response(response, status=status.HTTP_200_OK)
+        
+        
+    except Booking.DoesNotExist:
         return Response({"error": f"Booking with id: '{booking_id}' not found."}, status=status.HTTP_404_NOT_FOUND)
