@@ -81,6 +81,9 @@ class User(AbstractBaseUser, PermissionsMixin):
             from Chat.models import ChatRoom
             ChatRoom.objects.create(user=self)
 
+    def get_full_name(self):
+        return f"{self.first_name} {self.last_name}"
+
 
 class PasswordResetCode(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)

@@ -9,6 +9,7 @@ from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from .models import Booking
 from Helper.utils import upload_image_to_cloudinary_and_get_url
+from Driver.models import Driver
 
 @swagger_auto_schema(
     method='post',
@@ -62,7 +63,8 @@ from Helper.utils import upload_image_to_cloudinary_and_get_url
                                     'date_joined': openapi.Schema(type=openapi.TYPE_STRING, format='date-time', description='Date joined'),
                                     'profile_image_url': openapi.Schema(type=openapi.TYPE_STRING, description='Profile image URL')
                                 }
-                            )
+                            ),
+                            'driver_name': openapi.Schema(type=openapi.TYPE_STRING, description='Driver name'),
                         }
                     ),
                 }
@@ -100,6 +102,13 @@ def create_booking(request):
         car_make = car_make,
     )
 
+    driver = Driver.objects.last()
+    booking.driver = driver
+    
+    # update driver pending bookings count
+    driver.number_of_pending_bookings += 1
+    driver.save()
+
     booking.vehicle_image = upload_image_to_cloudinary_and_get_url(vehicle_image)
 
     if battery_level:
@@ -120,7 +129,8 @@ def create_booking(request):
 
     response = {
         "message": "Booking created successfully",
-        "booking": serializer.data
+        "booking": serializer.data,
+        "driver_name": driver.user.get_full_name()
     }
     return Response(response, status=status.HTTP_201_CREATED)
 

@@ -15,6 +15,7 @@ BOOKING_TYPE = (
 class Booking(models.Model):
 
     user = models.ForeignKey(User, on_delete=models.CASCADE)
+    driver = models.ForeignKey(User, related_name='booking_driver', null=True, blank=True, on_delete=models.CASCADE)
     location = models.CharField(max_length=225)
     car_make = models.CharField(max_length=225)
     battery_type = models.CharField(max_length=50)

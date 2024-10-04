@@ -61,6 +61,7 @@ INSTALLED_APPS = [
     'Chat',
     'channels',
     'Booking',
+    'Driver',
 ]
 
 REST_FRAMEWORK = {

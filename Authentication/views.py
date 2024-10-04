@@ -105,7 +105,8 @@ def Register(request):
     response = {
         "success": "Account created successfully",
         "user": user_serializer.data,
-        "tokens": tokens,
+        "access": tokens["access"],
+        "refresh": tokens["refresh"]
     }
 
     return Response(response, status=status.HTTP_201_CREATED)
@@ -473,7 +474,6 @@ def ResetPassword(request):
     except PasswordResetCode.DoesNotExist:
         return Response({"detail": "Invalid reset code."}, status=status.HTTP_400_BAD_REQUEST)
     
-
 @swagger_auto_schema(
     method='PATCH',
     operation_description="Update user profile settings including username, email, phone, password, and profile image.",

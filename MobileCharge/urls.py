@@ -22,6 +22,7 @@ urlpatterns = [
    path('api/auth/', include('Authentication.urls')),
    path('api/chat/', include('Chat.urls')),
    path('api/booking/', include('Booking.urls')),
+   path('api/driver/', include('Driver.urls')),
 
    path('swagger<format>/', schema_view.without_ui(cache_timeout=0), name='schema-json'),
    path('', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),

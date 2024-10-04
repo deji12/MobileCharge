@@ -4,7 +4,7 @@ from Authentication.serializers import UserInfoSerializer
 
 class BookingSerializer(ModelSerializer):
     user = UserInfoSerializer()
-
+    
     class Meta:
         model = Booking
         fields = '__all__'
