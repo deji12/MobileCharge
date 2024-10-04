@@ -67,7 +67,7 @@ def create_booking(request):
     )
 
     driver = Driver.objects.last()
-    booking.driver = driver
+    booking.driver = driver.user
     
     # update driver pending bookings count
     driver.number_of_pending_bookings += 1
@@ -159,8 +159,21 @@ def get_booking(request, booking_id):
 
 @swagger_auto_schema(
     method='patch',
-    operation_description="Update the status of a booking",
-    request_body=BookingSerializer,  # Pass the BookingSerializer directly
+    operation_description="Update the status of a booking (choices: Pending, Completed) and update the driver's booking counts.",
+    request_body=openapi.Schema(
+        type=openapi.TYPE_OBJECT,
+        properties={
+            'status': openapi.Schema(
+                type=openapi.TYPE_STRING,
+                enum=["Pending", "Completed"],  # Indicate the valid choices
+                description="New status of the booking. Choices are 'Pending' or 'Completed'."
+            )
+        },
+        required=['status'],
+        example={
+            "status": "Pending"
+        }
+    ),
     responses={
         200: openapi.Response(
             description="Booking status updated successfully",
@@ -180,19 +193,28 @@ def get_booking(request, booking_id):
         404: openapi.Response(description="Booking not found"),
     },
     tags=["Bookings"],  # Group this under 'Bookings' in the API docs
-    operation_summary="Update booking status"
-)   
+    operation_summary="Update booking status (Pending or Completed) and modify driver's booking counts"
+)  
 @permission_classes([IsAuthenticated])
 @api_view(["PATCH"])
 def update_booking_status(request, booking_id):
     
     try:
         booking = Booking.objects.get(id=booking_id)
+        driver = Driver.objects.get(driver=booking.driver)
 
         new_status = request.data.get("status")
 
         if not new_status:
             return Response({"error": "Status is required"}, status=status.HTTP_400_BAD_REQUEST)
+        
+        if new_status == "Pending":
+            driver.number_of_pending_bookings += 1
+
+        if new_status == "Completed":
+            driver.number_of_completed_bookings += 1
+        
+        driver.save()
 
         # Update the status field of the booking
         booking.status = new_status
