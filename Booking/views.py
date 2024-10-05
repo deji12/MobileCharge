@@ -58,16 +58,17 @@ def create_booking(request):
     if not (location and battery_type and car_make and vehicle_image):
         return Response({"error": "Fill reuired fields."}, status=status.HTTP_400_BAD_REQUEST)
     
+    # get the last created driver (assuming there is only one driver)
+    driver = Driver.objects.last()
+    
     # create a new booking object and save it to the database
     booking = Booking(
         user = user,
         location=location,
         battery_type = battery_type,
         car_make = car_make,
+        driver = driver.user
     )
-
-    driver = Driver.objects.last()
-    booking.driver = driver.user
     
     # update driver pending bookings count
     driver.number_of_pending_bookings += 1
@@ -111,7 +112,7 @@ def create_booking(request):
 )
 @permission_classes([IsAuthenticated])
 @api_view(["GET"])
-def get_bookings(self):
+def get_bookings(request):
 
     bookings = Booking.objects.all().exclude(status="Completed").order_by("-date")
     serializer = BookingSerializer(bookings, many=True)
@@ -208,10 +209,13 @@ def update_booking_status(request, booking_id):
         if not new_status:
             return Response({"error": "Status is required"}, status=status.HTTP_400_BAD_REQUEST)
         
+        # update driver stats accourdingly
         if new_status == "Pending":
             driver.number_of_pending_bookings += 1
+            driver.number_of_completed_bookings -= 1
 
         if new_status == "Completed":
+            driver.number_of_pending_bookings -= 1
             driver.number_of_completed_bookings += 1
         
         driver.save()
@@ -224,7 +228,6 @@ def update_booking_status(request, booking_id):
         response = {
             "message": "Booking status updated successfully",
             "booking": serializer.data,
-            "driver_name": booking.driver.user.get_full_name()
         }
         return Response(response, status=status.HTTP_200_OK)
         

@@ -180,7 +180,6 @@ class MyTokenObtainPairView(TokenObtainPairView):
         
         return response
 
-
 class MyTokenRefreshView(TokenRefreshView):
     serializer_class = TokenRefreshSerializer
 
@@ -221,40 +220,7 @@ class MyTokenRefreshView(TokenRefreshView):
     )
     def post(self, request, *args, **kwargs):
         return super().post(request, *args, **kwargs) 
-
-@swagger_auto_schema(
-    method='get',
-    responses={
-        200: openapi.Response(
-            description="User information retrieved successfully",
-            schema=UserInfoSerializer
-        ),
-        401: openapi.Response(
-            description="Unauthorized",
-            schema=openapi.Schema(
-                type=openapi.TYPE_OBJECT,
-                properties={
-                    'detail': openapi.Schema(type=openapi.TYPE_STRING, description="Error detail"),
-                },
-                example={
-                    "detail": "Authentication credentials were not provided."
-                }
-            )
-        ),
-    },
-    operation_description="Retrieve the current authenticated user's information.",
-    operation_summary="Get User Info",
-)
-@api_view(['GET'])
-@permission_classes([IsAuthenticated])
-def GetUserInfo(request):
-    user = request.user
-    serializer = UserInfoSerializer(user)
-
-    response_data = serializer.data
-    response_data["profile_image"] = user.profile_image_url()
-    return Response(response_data)    
- 
+     
 @swagger_auto_schema(
     method='post',
     request_body=openapi.Schema(
@@ -343,10 +309,7 @@ def Logout(request):
 def GetUserInfo(request):
     user = request.user
     serializer = UserInfoSerializer(user)
-
-    response_data = serializer.data
-    response_data["uploaded_profile_image"] = user.profile_image_url()
-    return Response(response_data)
+    return Response(serializer.data)
 
 @swagger_auto_schema(
     method='post',
@@ -486,6 +449,7 @@ def ResetPassword(request):
             'last_name': openapi.Schema(type=openapi.TYPE_STRING, description='Last name'),
             'vehicle_type': openapi.Schema(type=openapi.TYPE_STRING, description='Vehicle type'),
             'phone': openapi.Schema(type=openapi.TYPE_STRING, description='Phone number'),
+            'old_password': openapi.Schema(type=openapi.TYPE_STRING, format=openapi.FORMAT_PASSWORD, description='Old password'),
             'password': openapi.Schema(type=openapi.TYPE_STRING, format=openapi.FORMAT_PASSWORD, description='New password'),
             'confirm_password': openapi.Schema(type=openapi.TYPE_STRING, format=openapi.FORMAT_PASSWORD, description='Confirm new password'),
             'profile_image': openapi.Schema(type=openapi.TYPE_FILE, description='Profile image'),
@@ -522,45 +486,55 @@ def ProfileSetting(request):
     phone = request.POST.get('phone')
     password = request.POST.get('password')
     confirm_password = request.POST.get('confirm_password')
+    old_password = request.data.get('old_password')
     profile_image = request.FILES.get('profile_image')
 
     user = request.user
 
     # make sure payload contains data
-    if not (username or email or first_name or last_name or vehicle_type or phone or profile_image): 
+    if not request.data: 
         return Response({"error": "Empty form paylaod"}, status=status.HTTP_400_BAD_REQUEST)
     
     # validate email
-    if password and confirm_password:
+    if password and confirm_password and old_password:
+        
         if password != confirm_password:
             return Response({"error": "Passwords do not match"}, status=status.HTTP_400_BAD_REQUEST)
+        
         if len(password) <= 5:
             return Response({"error": "Password must be greater than 5 characters"}, status=status.HTTP_400_BAD_REQUEST)
+
+        # verify old password
+        if not user.check_password(old_password):
+            return Response({"error": "Invalid old password"}, status=status.HTTP_400_BAD_REQUEST)    
         
-        # update user password
+         # update user password
         user.set_password(password)
 
     # update user data
     if username and username != user.username: 
         user.username = username
     
-    if email and email!= user.email:
-        user.email = email
+    if email and email != user.email:
+        if not User.objects.filter(email=email).exists():
+            user.email = email
+        else:
+            return Response({"error": "Email already exists"}, status=status.HTTP_400_BAD_REQUEST)
 
-    if first_name and first_name!= user.first_name:
+    if first_name and first_name != user.first_name:
         user.first_name = first_name
 
-    if last_name and last_name!= user.last_name:
+    if last_name and last_name != user.last_name:
         user.last_name = last_name
 
-    if vehicle_type and vehicle_type!= user.vehicle_type:
+    if vehicle_type and vehicle_type != user.vehicle_type:
         user.vehicle_type = vehicle_type
 
-    if phone and phone!= user.phone:
+    if phone and phone != user.phone:
         user.phone = phone
 
     if profile_image:
-        user.profile_image = profile_image
+        user.profile_image = upload_image_to_cloudinary_and_get_url(profile_image)
 
     user.save()
     return Response({"success": "Password updated"}, status=status.HTTP_200_OK)
