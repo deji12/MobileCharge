@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stripe One-Time Checkout</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js" integrity="sha512-v2CJ7UaYy4JwqLDIrZUI/4hqeoQieOmAZNXBeQyjo21dadnwR+8ZaIJVT8EE2iyI61OV8e6M8PP2/4hpQINQ/g==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f9;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        .checkout-form {
+            background-color: white;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+            width: 300px;
+        }
+        h2 {
+            text-align: center;
+        }
+        input[type="text"], input[type="number"] {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+        }
+        button {
+            width: 100%;
+            padding: 10px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .error-message {
+            color: red;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="checkout-form">
+        <h2>Stripe Checkout</h2>
+        <form action="POST" id="checkout">
+            <input type="text" id="plan_title" placeholder="Plan Title" required>
+            <input type="number" id="amount" placeholder="Amount (USD)" required>
+            <input type="number" id="booking_id" placeholder="Booking ID" required>
+            <button id="checkout-button">Checkout</button>
+            <div class="error-message" id="error-message"></div>
+        </form>
+    </div>
+
+    <script>
+        $(document).ready(function() {
+            $("#checkout").on('submit', function(event) {
+                event.preventDefault();
+
+                const planTitle = $("#plan_title").val();
+                const amount = $("#amount").val();
+                const bookingId = $("#booking_id").val();
+                const errorMessage = $("#error-message");
+
+            
+                if (!planTitle || !amount || !bookingId) {
+                    errorMessage.text("All fields are required.");
+                    return;
+                }
+    
+                $.ajax({
+                    url: "http://127.0.0.1:8000/api/payment/stripe/create-checkout-session/",
+                    method: "POST",
+                    contentType: "application/json",
+                    data: JSON.stringify({
+                        amount: amount,
+                        plan_title: planTitle,
+                        booking_id: bookingId,
+                    }),
+                    success: function(data) {
+                        console.log("Success:", data);
+                        // Check if checkout_url is available in the response
+                        if (data.checkout_url) {
+                            window.location.href = data.checkout_url; // Redirect to Stripe checkout page
+                        } else {
+                            errorMessage.text('Checkout URL not found in response');
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        console.error("Error:", error);
+                        errorMessage.text("Error: " + error); // Display error message
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>

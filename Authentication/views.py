@@ -12,7 +12,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.decorators import permission_classes
 from django.utils.crypto import get_random_string
 from rest_framework_simplejwt.tokens import RefreshToken
-from .utils import send_password_reset_code
+from Helper.utils import EmailUser
 from django.contrib.auth import authenticate
 from rest_framework_simplejwt.exceptions import InvalidToken, TokenError
 from Helper.utils import upload_image_to_cloudinary_and_get_url
@@ -340,7 +340,7 @@ def RequestResetCode(request):
             PasswordResetCode.objects.create(user=user, code=code)
 
             # Send email (this is a simple example; configure your email backend as needed)
-            send_password_reset_code(user.email, code)
+            EmailUser(email=email, code=code).send()
 
             return Response({"detail": "Reset code sent successfully"}, status=status.HTTP_200_OK)
 

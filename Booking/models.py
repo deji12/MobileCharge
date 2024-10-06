@@ -23,9 +23,10 @@ class Booking(models.Model):
     kilometers_left = models.FloatField(default=0)
     date = models.DateTimeField(auto_now_add=True)
     vehicle_image = models.URLField()
-    description = models.TextField()
+    description = models.TextField(null=True, blank=True)
     booking_type = models.CharField(max_length=10, choices=BOOKING_TYPE, default='Normal')
     status = models.CharField(max_length=10, choices=STATUS, default='Pending')
+    paid = models.BooleanField(default=False)
 
     def __str__(self):
         return f"{self.user} - {self.car_make}"

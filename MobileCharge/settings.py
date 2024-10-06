@@ -14,6 +14,7 @@ from pathlib import Path
 from datetime import timedelta
 import os
 from corsheaders.defaults import default_headers
+from decouple import config
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -23,16 +24,15 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-q2u@_wz5pwk@!iiy71%(n0wo)=9=vqg(j4_&8&rigg&wywuo#e'
+SECRET_KEY = config('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = config('DEBUG', cast=bool)
 
-ALLOWED_HOSTS = ['*']
+ALLOWED_HOSTS = config('ALLOWED_HOSTS').split(',')
 
-CORS_ALLOWED_ORIGINS = [
-    'http://localhost:3000',  'https://ev-charging-site.vercel.app'
-]
+CORS_ALLOWED_ORIGINS = config('CORS_ALLOWED_ORIGINS').split(',')
+
 CORS_ALLOW_HEADERS = list(default_headers) + [
     'x-api-key',
 ]
@@ -62,6 +62,7 @@ INSTALLED_APPS = [
     'channels',
     'Booking',
     'Driver',
+    'Payment',
 ]
 
 REST_FRAMEWORK = {
@@ -206,12 +207,20 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 AUTH_USER_MODEL = 'Authentication.User'
 
-EMAIL_HOST = 'smtp.gmail.com'
-EMAIL_PORT = 465
-EMAIL_USE_SSL = True
-EMAIL_HOST_USER = 'adesolaayodeji53@gmail.com'
-EMAIL_HOST_PASSWORD = 'qqlf vvut qgze alwz'
+# Email Settings
+EMAIL_HOST = config('EMAIL_HOST')
+EMAIL_PORT = config('EMAIL_PORT', cast=int)
+EMAIL_USE_SSL = config('EMAIL_USE_SSL', cast=bool)
+EMAIL_HOST_USER = config('EMAIL_HOST_USER')
+EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD')
 
-CLOUDINARY_CLOUD_NAME = "dqathrf7e"
-CLOUDINARY_API_KEY = "138123479911378"
-CLOUDINARY_API_SECRET = "II8QnQT61Gx-KTHEvt1Ef6ewRPE"
+# Cloudinary Settings
+CLOUDINARY_CLOUD_NAME = config('CLOUDINARY_CLOUD_NAME')
+CLOUDINARY_API_KEY = config('CLOUDINARY_API_KEY')
+CLOUDINARY_API_SECRET = config('CLOUDINARY_API_SECRET')
+
+# Stripe Settings
+STRIPE_SECRET_KEY = config('STRIPE_SECRET_KEY')
+
+SITE_PURCHASE_SUCCESS_URL = config('SITE_PURCHASE_SUCCESS_URL')
+SITE_PURCHASE_FAILED_URL = config('SITE_PURCHASE_FAILED_URL')

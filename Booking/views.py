@@ -114,7 +114,7 @@ def create_booking(request):
 @api_view(["GET"])
 def get_bookings(request):
 
-    bookings = Booking.objects.all().exclude(status="Completed").order_by("-date")
+    bookings = Booking.objects.filter(paid=True).exclude(status="Completed").order_by("-date")
     serializer = BookingSerializer(bookings, many=True)
 
     return Response(serializer.data, status=status.HTTP_200_OK)
@@ -193,7 +193,7 @@ def get_booking(request, booking_id):
         400: openapi.Response(description="Invalid request (e.g., status not provided)"),
         404: openapi.Response(description="Booking not found"),
     },
-    tags=["Bookings"],  # Group this under 'Bookings' in the API docs
+    # tags=["Bookings"],  # Group this under 'Bookings' in the API docs
     operation_summary="Update booking status (Pending or Completed) and modify driver's booking counts"
 )  
 @permission_classes([IsAuthenticated])
