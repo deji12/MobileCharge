@@ -20,6 +20,14 @@ class StripeOneTimeCheckoutView(APIView):
 
     """
     Handles the creation of a Stripe one-time payment session and generates an invoice.
+
+    This view is responsible for initiating a payment process using Stripe's checkout system. It accepts 
+    a POST request containing payment details and returns a URL for the Stripe checkout session. 
+    Upon successful payment, an invoice is generated and associated with a booking.
+
+    Methods:
+        post(request): 
+            Creates a one-time checkout session with Stripe and generates an invoice.
     """
 
     @swagger_auto_schema(
@@ -34,47 +42,70 @@ class StripeOneTimeCheckoutView(APIView):
             required=['amount', 'plan_title', 'booking_id'],
         ),
         responses={
-            302: openapi.Response(
-                description="Redirects to the Stripe checkout session URL. The `invoice_id` is included in the success URL.",
+            200: openapi.Response(
+                description="Returns the Stripe checkout session URL upon successful creation.",
                 examples={
                     "application/json": {
-                        "url": "https://checkout.stripe.com/pay/cs_test_a1b2c3d4e5?success=true&session_id=cs_test_a1b2c3d4e5&invoice_id=1234"
+                        "checkout_url": "https://checkout.stripe.com/pay/cs_test_a1b2c3d4e5?success=true&session_id=cs_test_a1b2c3d4e5&invoice_id=1234"
                     }
                 }
             ),
-            500: openapi.Response(description="Error occurred during checkout session creation.")
+            400: openapi.Response(
+                description="Missing required fields in the request."
+            ),
+            500: openapi.Response(
+                description="Error occurred during checkout session creation."
+            )
         },
-        # tags=["Payments"],
         operation_summary="Create a one-time payment session via Stripe and generate an invoice"
     )
     def post(self, request):
-        try:
+        """
+        Handles POST requests to create a Stripe checkout session and an associated invoice.
 
+        Parameters:
+            request (Request): The request object containing the payment details in JSON format.
+                Expected fields:
+                    - amount (float): The total amount to be charged (in USD).
+                    - plan_title (str): The name of the plan being purchased.
+                    - booking_id (int): The unique identifier for the booking.
+
+        Returns:
+            Response: A JSON response containing the checkout session URL if successful, 
+                      or an error message in case of failure.
+
+        Error Handling:
+            If any required fields are missing, a 400 BAD REQUEST response is returned.
+            If an error occurs during the creation of the checkout session or invoice, 
+            a 500 INTERNAL SERVER ERROR response is returned.
+        """
+        try:
+            # Retrieve payment details from the request
             amount = request.data.get('amount')
             plan_title = request.data.get('plan_title')
             booking_id = request.data.get('booking_id')
 
+            # Validate required fields
             if not (amount and plan_title and booking_id):
                 return Response(
                     {'error': 'Missing required fields: amount, plan_title, booking_id'},
-                    status = status.HTTP_400_BAD_REQUEST
+                    status=status.HTTP_400_BAD_REQUEST
                 )
 
-                        # create invoice
+            # Create a new invoice associated with the booking
             invoice = Invoice(
-                booking = Booking.objects.get(id=booking_id),
-                amount = float(amount),
+                booking=Booking.objects.get(id=booking_id),
+                amount=float(amount),
             )
-
             invoice.save()
 
+            # Create a Stripe checkout session
             checkout_session = stripe.checkout.Session.create(
                 line_items=[
                     {
-                        # Provide the exact Price ID (for example, pr_1234) of the product you want to sell
                         'price_data': {
                             'currency': 'usd',
-                            'unit_amount': (int(amount) * 100),
+                            'unit_amount': int(amount * 100),  # Convert amount to cents
                             'product_data': {
                                 'name': plan_title,
                                 'images': ['https://res.cloudinary.com/dqathrf7e/image/upload/v1728217409/logo.0430ece9704bdaedc044_xoulcl.png']
@@ -83,19 +114,22 @@ class StripeOneTimeCheckoutView(APIView):
                         'quantity': 1,
                     },
                 ],
-                payment_method_types = [ 'card'],
+                payment_method_types=['card'],
                 mode='payment',
                 success_url=settings.SITE_PURCHASE_SUCCESS_URL + '/?success=true&session_id={CHECKOUT_SESSION_ID}&' + f'invoice_id={invoice.invoice_id}',
                 cancel_url=settings.SITE_PURCHASE_FAILED_URL + '/canceled=true&' + f'invoice_id={invoice.invoice_id}',
             )
-            print(checkout_session.url)
+
+            # Return the checkout session URL
             return Response({'checkout_url': checkout_session.url}, status=status.HTTP_200_OK)
-        
-        except:
+
+        except Exception as e:
+            # Handle errors during checkout session creation
             return Response(
-                {'errror': 'Something went wrong when creating stripe checkout session'},
-                status = status.HTTP_500_INTERNAL_SERVER_ERROR
+                {'error': f'Something went wrong when creating the Stripe checkout session: {str(e)}'},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
+
 
 @swagger_auto_schema(
     method='patch',
