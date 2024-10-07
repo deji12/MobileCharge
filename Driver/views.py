@@ -27,7 +27,6 @@ from drf_yasg import openapi
         ),
         401: "Unauthorized",  # Example of another response status
     },
-    tags=["Drivers"]  # Group this endpoint under "Drivers" in the documentation
 )
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
@@ -41,3 +40,50 @@ def get_drivers(request):
     drivers = Driver.objects.all()
     serializer = DriverSerializer(drivers, many=True)
     return Response(serializer.data, status=status.HTTP_200_OK)
+
+@swagger_auto_schema(
+    method='get',
+    operation_description="Retrieve the details of the last driver in the system.",
+    responses={
+        200: openapi.Response(
+            description="Successfully retrieved the last driver.",
+            examples={
+                "application/json": {
+                    "user": {
+                        "id": 1,
+                        "username": "johndoe",
+                        "email": "johndoe@example.com",
+                        "first_name": "John",
+                        "last_name": "Doe",
+                        "phone": "+1234567890",
+                        "is_active": True,
+                        "is_superuser": False,
+                        "date_joined": "2023-10-07T12:34:56",
+                        "profile_image": "https://example.com/media/images/profile.jpg"
+                    },
+                    "number_of_completed_bookings": 5,
+                    "number_of_pending_bookings": 2
+                }
+            }
+        ),
+        404: openapi.Response(
+            description="No drivers found.",
+            examples={
+                "application/json": {
+                    "error": "No drivers found."
+                }
+            }
+        ),
+    },
+    operation_summary="Retrieve the last driver"
+)
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def get_last_driver(request):
+
+    try:
+        last_driver = Driver.objects.last()
+        serializer = DriverSerializer(last_driver)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+    except:
+        return Response({"error": "No drivers found."}, status=status.HTTP_404_NOT_FOUND)

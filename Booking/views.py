@@ -18,6 +18,7 @@ from Driver.models import Driver
         type=openapi.TYPE_OBJECT,
         required=['location', 'car_make', 'battery_type', 'vehicle_image'],
         properties={
+            'id': openapi.Schema(type=openapi.TYPE_INTEGER, description='ID of the booking'),
             'location': openapi.Schema(type=openapi.TYPE_STRING, description='Location of the booking'),
             'car_make': openapi.Schema(type=openapi.TYPE_STRING, description='Car make/model'),
             'battery_type': openapi.Schema(type=openapi.TYPE_STRING, description='Type of car battery'),

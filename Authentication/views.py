@@ -537,4 +537,4 @@ def ProfileSetting(request):
         user.profile_image = upload_image_to_cloudinary_and_get_url(profile_image)
 
     user.save()
-    return Response({"success": "Password updated"}, status=status.HTTP_200_OK)
+    return Response({"success": "Profile updated"}, status=status.HTTP_200_OK)

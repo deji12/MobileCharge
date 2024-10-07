@@ -1,5 +1,6 @@
 from django.db import models
 from Authentication.models import User
+import uuid
 
 STATUS = (
     ('Pending', 'Pending'),
@@ -25,8 +26,12 @@ class Booking(models.Model):
     vehicle_image = models.URLField()
     description = models.TextField(null=True, blank=True)
     booking_type = models.CharField(max_length=10, choices=BOOKING_TYPE, default='Normal')
+
+    invoice_id = models.UUIDField(null=True, blank=True, default=uuid.uuid4, editable=False)
+    price = models.FloatField(null=True, blank=True)
     status = models.CharField(max_length=10, choices=STATUS, default='Pending')
     paid = models.BooleanField(default=False)
+    date = models.DateField(null=True, blank=True, auto_now_add=True)
 
     def __str__(self):
         return f"{self.user} - {self.car_make}"

@@ -1,10 +1,11 @@
 from rest_framework.serializers import ModelSerializer
-from .models import Invoice
+from .models import PricingPlans
 from Booking.serializers import BookingSerializer
+from taggit.serializers import TagListSerializerField
 
-class InvoiceSerializer(ModelSerializer):
-    booking = BookingSerializer()
-    
+class PricingSerializer(ModelSerializer):
+    features = TagListSerializerField()
+
     class Meta:
-        model = Invoice
+        model = PricingPlans
         fields = '__all__'
