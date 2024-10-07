@@ -64,6 +64,7 @@ INSTALLED_APPS = [
     'Driver',
     'Payment',
     'taggit',
+    'import_export',
 ]
 
 REST_FRAMEWORK = {
