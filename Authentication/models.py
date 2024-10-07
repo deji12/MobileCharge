@@ -49,8 +49,8 @@ class User(AbstractBaseUser, PermissionsMixin):
         Returns:
             str: The URL of the user's profile picture or a default image URL.
         """
-        if self.profile_image and hasattr(self.profile_image, 'url'):
-            return self.profile_image.url
+        if self.profile_image:
+            return self.profile_image
         
         
         return "https://res.cloudinary.com/the-proton-guy/image/upload/v1660906962/6215195_0_pjwqfq.webp"
