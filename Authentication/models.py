@@ -32,7 +32,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     last_name = models.CharField(max_length=30, default='', null=True, blank=True, help_text="The user's last name.")
     
     phone = models.CharField(max_length=15, default='', null=True, blank=True, help_text="The user's phone number.")
-    profile_image = models.FileField(upload_to="images/profile-photos/", null=True, blank=True, help_text="User's profile image")
+    profile_image = models.URLField(null=True, blank=True, help_text="User's profile image")
     
     is_staff =  models.BooleanField(default=False)
     is_superuser = models.BooleanField(default=False, help_text="Indicates whether the user has all admin permissions. Defaults to False.")
