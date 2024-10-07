@@ -1,10 +1,15 @@
-from django.conf import settings
 import cloudinary
 import cloudinary.uploader
 from django.conf import settings
-from django.conf import settings
+import urllib.parse
 from django.core.mail import EmailMessage
     
+cloudinary.config(
+    cloud_name = settings.CLOUDINARY_CLOUD_NAME,
+    api_key = settings.CLOUDINARY_API_KEY,
+    api_secret = settings.CLOUDINARY_API_SECRET
+)
+
 class EmailUser:
     
     def __init__(self, email, failed=False, code=None, booking=None):
@@ -53,19 +58,14 @@ class EmailUser:
         email_message.fail_silently = True
         email_message.send()
 
-
-cloudinary.config(
-    cloud_name = settings.CLOUDINARY_CLOUD_NAME,
-    api_key = settings.CLOUDINARY_API_KEY,
-    api_secret = settings.CLOUDINARY_API_SECRET
-)
-
 def upload_image_to_cloudinary_and_get_url(image):
 
     response = cloudinary.uploader.upload(image)
     uploaded_image_url = response['secure_url']
 
-    return uploaded_image_url
+    decoded_url = urllib.parse.unquote(uploaded_image_url)
+    
+    return decoded_url
 
 """
 +16088646206
