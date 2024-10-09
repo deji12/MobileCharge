@@ -12,7 +12,7 @@ cloudinary.config(
 
 class EmailUser:
     
-    def __init__(self, email, failed=False, code=None, booking=None):
+    def __init__(self, email, booking=None, code=None, failed=False):
         self.email = email
         self.failed = failed
 
@@ -25,28 +25,32 @@ class EmailUser:
         self.code = code
         self.subject = 'Your Password Reset Code'
         self.message = f'Your password reset code is {self.code}.'
+        self.send()
 
     def _set_purchase_confirmation_email(self, booking):
         if not self.failed:
-                self.subject = 'Nre Booking Purchase'
+                self.subject = 'New Booking Purchase'
                 self.message = (
-                f'Your payment for the booking has been successfully verified. Below are the details of your booking and purchase:\n\n'
-                f'BOOKING DETAILS:\n\n'
-                f'Booking Type: {booking.booking_type}\n'
-                f'Driver Name: {booking.driver.get_full_name()}\n'
-                f'Driver Phone Number: {booking.driver.phone}\n\n'
-                f'PURCHASE DETAILS:\n\n'
-                f'Invoice ID: {booking.invoice_id}\n'
-                f'Amount: ${booking.price:.2f}\n'
-                f'Date: {booking.date.strftime("%B %d, %Y")}\n\n'
-                'Thank you for your purchase!'
-            )
+                    f'Your payment for the booking has been successfully verified. Below are the details of your booking and purchase:\n\n'
+                    f'BOOKING DETAILS:\n\n'
+                    f'Booking Type: {booking.booking_type}\n'
+                    f'Driver Name: {booking.driver.get_full_name()}\n'
+                    f'Driver Phone Number: {booking.driver.phone}\n\n'
+                    f'PURCHASE DETAILS:\n\n'
+                    f'Invoice ID: {booking.invoice_id}\n'
+                    f'Amount: ${booking.price:.2f}\n'
+                    f'Date: {booking.date.strftime("%B %d, %Y")}\n\n'
+                    'Thank you for your purchase!'
+                )
+
+                self.send()
                 
         else:
             self.subject = 'Failed Booking Purchase'
             self.message = (
                 f'Your payment for the booking failed and could not be verified.'
             )
+            self.send()
 
     def send(self):
         email_message = EmailMessage(

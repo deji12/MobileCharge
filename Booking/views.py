@@ -10,6 +10,9 @@ from rest_framework.response import Response
 from .models import Booking
 from Helper.utils import upload_image_to_cloudinary_and_get_url
 from Driver.models import Driver
+from django.conf import settings
+from django.core.mail import EmailMessage
+from Payment.models import PricingPlans
 
 @swagger_auto_schema(
     method='post',
@@ -46,6 +49,7 @@ def create_booking(request):
     user = request.user
 
     # get payload data
+    plan_id = request.data.get('plan_id')
     location = request.data.get('location')
     car_make = request.data.get('car_make')
     battery_type = request.data.get('battery_type')
@@ -61,6 +65,16 @@ def create_booking(request):
     
     # get the last created driver (assuming there is only one driver)
     driver = Driver.objects.last()
+
+    try:
+        # get the pricing plan detail
+        plan = PricingPlans.objects.get(id=int(plan_id))
+    
+    except:
+        return Response(
+            {'error': 'Invalid plan_id'},
+            status=status.HTTP_400_BAD_REQUEST
+        )
     
     # create a new booking object and save it to the database
     booking = Booking(
@@ -68,7 +82,8 @@ def create_booking(request):
         location=location,
         battery_type = battery_type,
         car_make = car_make,
-        driver = driver.user
+        driver = driver.user,
+        price = plan.price
     )
     
     # update driver pending bookings count
@@ -94,7 +109,7 @@ def create_booking(request):
     serializer = BookingSerializer(booking)
 
     response = {
-        "message": "Booking created successfully",
+        "message": "Booking created successfully. You will be notified when your booking is approved",
         "booking": serializer.data,
     }
     return Response(response, status=status.HTTP_201_CREATED)
@@ -215,7 +230,17 @@ def update_booking_status(request, booking_id):
             driver.number_of_pending_bookings += 1
             driver.number_of_completed_bookings -= 1
 
-        if new_status == "Completed":
+        elif new_status == "Approved":
+            email_message = EmailMessage(
+                "Booking request approved",
+                f"Your booking request with ID {booking.invoice_id} has been approved. Please make use of the link below make payment and complete your booking request\n\n{settings.CHECKOUT_URL}?booking_id={booking.id}",
+                settings.EMAIL_HOST_USER,
+                [booking.user.email]
+            )
+            email_message.fail_silently = True
+            email_message.send()
+
+        elif new_status == "Completed":
             driver.number_of_pending_bookings -= 1
             driver.number_of_completed_bookings += 1
         
