@@ -138,8 +138,8 @@ class StripeOneTimeCheckoutView(APIView):
                 },
                 payment_method_types=['card'],
                 mode='payment',
-                success_url=settings.SITE_PURCHASE_SUCCESS_URL + '/?success=true&session_id={CHECKOUT_SESSION_ID}',
-                cancel_url=settings.SITE_PURCHASE_FAILED_URL + '/canceled=true',
+                success_url=settings.SITE_PURCHASE_SUCCESS_URL + '&?success=true&session_id={CHECKOUT_SESSION_ID}',
+                cancel_url=settings.SITE_PURCHASE_CANCEL_URL,
             )
 
             # Return the checkout session URL

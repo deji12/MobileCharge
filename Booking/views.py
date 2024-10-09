@@ -214,10 +214,10 @@ def get_booking(request, booking_id):
 )  
 @permission_classes([IsAuthenticated])
 @api_view(["PATCH"])
-def update_booking_status(request, booking_id):
+def update_booking_status(request, invoice_id):
     
     try:
-        booking = Booking.objects.get(id=booking_id)
+        booking = Booking.objects.get(invoice_id=invoice_id)
         driver = Driver.objects.get(driver=booking.driver)
 
         new_status = request.data.get("status")
@@ -233,7 +233,7 @@ def update_booking_status(request, booking_id):
         elif new_status == "Approved":
             email_message = EmailMessage(
                 "Booking request approved",
-                f"Your booking request with ID {booking.invoice_id} has been approved. Please make use of the link below make payment and complete your booking request\n\n{settings.CHECKOUT_URL}?booking_id={booking.id}",
+                f"Your booking request with ID {booking.invoice_id} has been approved. Please make use of the link below make payment and complete your booking request\n\n{settings.CHECKOUT_URL}?booking_invoice_id={booking.invoice_id}",
                 settings.EMAIL_HOST_USER,
                 [booking.user.email]
             )
@@ -259,4 +259,4 @@ def update_booking_status(request, booking_id):
         
         
     except Booking.DoesNotExist:
-        return Response({"error": f"Booking with id: '{booking_id}' not found."}, status=status.HTTP_404_NOT_FOUND)
+        return Response({"error": f"Booking with invoice id: '{invoice_id}' not found."}, status=status.HTTP_404_NOT_FOUND)
