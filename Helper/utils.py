@@ -12,7 +12,7 @@ cloudinary.config(
 
 class EmailUser:
     
-    def __init__(self, email, booking=None, code=None, failed=False):
+    def __init__(self, email, booking=None, code=None, failed=False, subscription_renewed=False, subscription_canceled=False):
         self.email = email
         self.failed = failed
 
@@ -20,6 +20,10 @@ class EmailUser:
             self._set_reset_code_email(code)
         elif booking is not None:
             self._set_purchase_confirmation_email(booking)
+        elif subscription_renewed:
+            self._set_subscription_renewal_email()
+        elif subscription_canceled:
+            self._set_subscription_cancellation_email()
 
     def _set_reset_code_email(self, code):
         self.code = code
@@ -29,21 +33,20 @@ class EmailUser:
 
     def _set_purchase_confirmation_email(self, booking):
         if not self.failed:
-                self.subject = 'New Booking Purchase'
-                self.message = (
-                    f'Your payment for the booking has been successfully verified. Below are the details of your booking and purchase:\n\n'
-                    f'BOOKING DETAILS:\n\n'
-                    f'Booking Type: {booking.booking_type}\n'
-                    f'Driver Name: {booking.driver.get_full_name()}\n'
-                    f'Driver Phone Number: {booking.driver.phone}\n\n'
-                    f'PURCHASE DETAILS:\n\n'
-                    f'Invoice ID: {booking.invoice_id}\n'
-                    f'Amount: ${booking.price:.2f}\n'
-                    f'Date: {booking.date.strftime("%B %d, %Y")}\n\n'
-                    'Thank you for your purchase!'
-                )
-
-                self.send()
+            self.subject = 'New Booking Purchase'
+            self.message = (
+                f'Your payment for the booking has been successfully verified. Below are the details of your booking and purchase:\n\n'
+                f'BOOKING DETAILS:\n\n'
+                f'Booking Type: {booking.booking_type}\n'
+                f'Driver Name: {booking.driver.get_full_name()}\n'
+                f'Driver Phone Number: {booking.driver.phone}\n\n'
+                f'PURCHASE DETAILS:\n\n'
+                f'Invoice ID: {booking.invoice_id}\n'
+                f'Amount: ${booking.price:.2f}\n'
+                f'Date: {booking.date.strftime("%B %d, %Y")}\n\n'
+                'Thank you for your purchase!'
+            )
+            self.send()
                 
         else:
             self.subject = 'Failed Booking Purchase'
@@ -51,6 +54,20 @@ class EmailUser:
                 f'Your payment for the booking failed and could not be verified.'
             )
             self.send()
+
+    def _set_subscription_renewal_email(self):
+        self.subject = 'Subscription Renewal Successful'
+        self.message = (
+            'Your subscription has been successfully renewed. Thank you for continuing to be a valued member!'
+        )
+        self.send()
+
+    def _set_subscription_cancellation_email(self):
+        self.subject = 'Subscription Canceled'
+        self.message = (
+            'Your subscription has been successfully canceled. We are sorry to see you go. If you have any feedback, please let us know!'
+        )
+        self.send()
 
     def send(self):
         email_message = EmailMessage(

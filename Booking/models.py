@@ -31,6 +31,7 @@ class Booking(models.Model):
     price = models.FloatField(null=True, blank=True)
     status = models.CharField(max_length=10, choices=STATUS, default='Pending')
     paid = models.BooleanField(default=False)
+    scheduled_date_and_time = models.DateTimeField(null=True, blank=True)
     date = models.DateField(null=True, blank=True, auto_now_add=True)
 
     def __str__(self):

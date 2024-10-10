@@ -39,20 +39,34 @@ from Helper.utils import upload_image_to_cloudinary_and_get_url
             examples={
                 "application/json": {
                     "success": "Account created successfully",
-                    "tokens": {
-                        "access": "jwt_access_token",
-                        "refresh": "jwt_refresh_token"
-                    }
+                    "user": {
+                        "id": 1,
+                        "username": "user@example.com",
+                        "email": "user@example.com",
+                        "first_name": "John",
+                        "last_name": "Doe",
+                        "phone": "1234567890",
+                        "is_active": True,
+                        "is_superuser": False,
+                        "date_joined": "2024-10-10T12:34:56Z",
+                        "profile_image": "https://example.com/profile.jpg",
+                        "subscription_type": "Visitor"  # or the actual subscription type
+                    },
+                    "access": "jwt_access_token",
+                    "refresh": "jwt_refresh_token"
                 }
             }
         ),
         400: openapi.Response(
             description="Bad Request",
             examples={
-                "application/json": {"error": "Some error message, e.g. Passwords do not match"}
+                "application/json": {
+                    "error": "Some error message, e.g. Passwords do not match"
+                }
             }
         )
-    }
+    },
+    operation_summary="Register User",
 )
 @api_view(['POST'])
 def Register(request):

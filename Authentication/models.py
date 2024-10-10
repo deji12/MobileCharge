@@ -33,6 +33,8 @@ class User(AbstractBaseUser, PermissionsMixin):
     
     phone = models.CharField(max_length=15, default='', null=True, blank=True, help_text="The user's phone number.")
     profile_image = models.URLField(null=True, blank=True, help_text="User's profile image")
+
+    plan_type = models.CharField(max_length=50, default='Visitor')
     
     is_staff =  models.BooleanField(default=False)
     is_superuser = models.BooleanField(default=False, help_text="Indicates whether the user has all admin permissions. Defaults to False.")

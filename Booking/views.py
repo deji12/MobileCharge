@@ -13,6 +13,8 @@ from Driver.models import Driver
 from django.conf import settings
 from django.core.mail import EmailMessage
 from Payment.models import PricingPlans
+from django.utils import timezone
+from datetime import datetime
 
 @swagger_auto_schema(
     method='post',
@@ -59,6 +61,14 @@ def create_booking(request):
     description = request.data.get('description')
     booking_type = request.data.get('booking_type')
 
+    # New date and time fields from the request
+    year = request.data.get('year')
+    month = request.data.get('month')
+    day = request.data.get('day')
+    hour = request.data.get('hour')
+    minute = request.data.get('minute')
+    
+
     # verify that required fields are present
     if not (location and battery_type and car_make and vehicle_image):
         return Response({"error": "Fill reuired fields."}, status=status.HTTP_400_BAD_REQUEST)
@@ -85,6 +95,23 @@ def create_booking(request):
         driver = driver.user,
         price = plan.price
     )
+
+    if year and month and day and hour and minute:
+
+        try:
+            scheduled_date_and_time = datetime(
+                year=int(year),
+                month=int(month),
+                day=int(day),
+                hour=int(hour),
+                minute=int(minute),
+                tzinfo=timezone.get_current_timezone()
+            )
+
+            booking.scheduled_date_and_time = scheduled_date_and_time
+
+        except (TypeError, ValueError) as e:
+            return Response({"error": "Invalid date or time provided."}, status=400)
     
     # update driver pending bookings count
     driver.number_of_pending_bookings += 1
@@ -176,14 +203,14 @@ def get_booking(request, booking_id):
 
 @swagger_auto_schema(
     method='patch',
-    operation_description="Update the status of a booking (choices: Pending, Completed) and update the driver's booking counts.",
+    operation_description="Update the status of a booking (choices: Pending, Approved, Completed) and update the driver's booking counts.",
     request_body=openapi.Schema(
         type=openapi.TYPE_OBJECT,
         properties={
             'status': openapi.Schema(
                 type=openapi.TYPE_STRING,
                 enum=["Pending", "Completed"],  # Indicate the valid choices
-                description="New status of the booking. Choices are 'Pending' or 'Completed'."
+                description="New status of the booking. Choices are 'Pending', 'Approved', or 'Completed'."
             )
         },
         required=['status'],
