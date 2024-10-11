@@ -161,7 +161,7 @@ def create_booking(request):
 @api_view(["GET"])
 def get_bookings(request):
 
-    bookings = Booking.objects.filter(paid=True).exclude(status="Completed").order_by("-date")
+    bookings = Booking.objects.filter(status="Pending").order_by("date")
     serializer = BookingSerializer(bookings, many=True)
 
     return Response(serializer.data, status=status.HTTP_200_OK)
