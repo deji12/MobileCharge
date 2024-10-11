@@ -12,7 +12,7 @@ from Helper.utils import upload_image_to_cloudinary_and_get_url
 from Driver.models import Driver
 from django.conf import settings
 from django.core.mail import EmailMessage
-from Payment.models import PricingPlans
+from Payment.models import PricingPlans, Subscription
 from django.utils import timezone
 from datetime import datetime
 
@@ -108,6 +108,10 @@ def create_booking(request):
                 tzinfo=timezone.get_current_timezone()
             )
 
+            # format the time properly
+            scheduled_date_and_time = timezone.make_aware(scheduled_date_and_time, timezone.get_current_timezone())
+
+            # Set the booking's scheduled date and time
             booking.scheduled_date_and_time = scheduled_date_and_time
 
         except (TypeError, ValueError) as e:
@@ -258,14 +262,23 @@ def update_booking_status(request, invoice_id):
             driver.number_of_completed_bookings -= 1
 
         elif new_status == "Approved":
-            email_message = EmailMessage(
-                "Booking request approved",
-                f"Your booking request with ID {booking.invoice_id} has been approved. Please make use of the link below make payment and complete your booking request\n\n{settings.CHECKOUT_URL}?booking_invoice_id={booking.invoice_id}",
-                settings.EMAIL_HOST_USER,
-                [booking.user.email]
-            )
-            email_message.fail_silently = True
-            email_message.send()
+
+            # make sure to only send email if user is not subscribed
+            if not Subscription.objects.filter(user=booking.user, status='active').exists():
+
+                # send email to user
+                email_message = EmailMessage(
+                    "Booking request approved",
+                    f"Your booking request with ID {booking.invoice_id} has been approved. Please make use of the link below make payment and complete your booking request\n\n{settings.CHECKOUT_URL}?booking_invoice_id={booking.invoice_id}",
+                    settings.EMAIL_HOST_USER,
+                    [booking.user.email]
+                )
+                email_message.fail_silently = True
+                email_message.send()
+
+            else:
+                # set booking as paid if user is a membership user
+                booking.paid = True
 
         elif new_status == "Completed":
             driver.number_of_pending_bookings -= 1

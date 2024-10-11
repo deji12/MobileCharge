@@ -2,7 +2,7 @@ from django.test import TestCase
 
 import requests
 
-response = requests.get('http://127.0.0.1:8000/api/payment/pricing-plans/')
+response = requests.post('http://127.0.0.1:8000/api/payment/cancel-subscription/')
 print(response.status_code)  # Check the status code
 
 if response.status_code == 200:

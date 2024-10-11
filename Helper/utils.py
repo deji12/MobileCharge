@@ -12,7 +12,7 @@ cloudinary.config(
 
 class EmailUser:
     
-    def __init__(self, email, booking=None, code=None, failed=False, subscription_renewed=False, subscription_canceled=False):
+    def __init__(self, email, booking=None, code=None, failed=False, subscription_renewed=None, subscription_canceled=False, subscription_thank_you=False):
         self.email = email
         self.failed = failed
 
@@ -20,10 +20,12 @@ class EmailUser:
             self._set_reset_code_email(code)
         elif booking is not None:
             self._set_purchase_confirmation_email(booking)
-        elif subscription_renewed:
+        elif subscription_renewed and subscription_renewed == False:
             self._set_subscription_renewal_email()
         elif subscription_canceled:
             self._set_subscription_cancellation_email()
+        elif subscription_thank_you:
+            self._set_subscription_thank_you_email()  # New method for thank-you email
 
     def _set_reset_code_email(self, code):
         self.code = code
@@ -47,26 +49,24 @@ class EmailUser:
                 'Thank you for your purchase!'
             )
             self.send()
-                
         else:
             self.subject = 'Failed Booking Purchase'
-            self.message = (
-                f'Your payment for the booking failed and could not be verified.'
-            )
+            self.message = 'Your payment for the booking failed and could not be verified.'
             self.send()
 
     def _set_subscription_renewal_email(self):
         self.subject = 'Subscription Renewal Successful'
-        self.message = (
-            'Your subscription has been successfully renewed. Thank you for continuing to be a valued member!'
-        )
+        self.message = 'Your subscription has been successfully renewed. Thank you for continuing to be a valued member!'
         self.send()
 
     def _set_subscription_cancellation_email(self):
         self.subject = 'Subscription Canceled'
-        self.message = (
-            'Your subscription has been successfully canceled. We are sorry to see you go. If you have any feedback, please let us know!'
-        )
+        self.message = 'Your subscription has been successfully canceled. We are sorry to see you go. If you have any feedback, please let us know!'
+        self.send()
+
+    def _set_subscription_thank_you_email(self):
+        self.subject = 'Thank You for Subscribing!'
+        self.message = 'Thank you for subscribing to our service! We appreciate your support and hope you enjoy our offerings.'
         self.send()
 
     def send(self):
@@ -78,6 +78,7 @@ class EmailUser:
         )
         email_message.fail_silently = True
         email_message.send()
+
 
 def upload_image_to_cloudinary_and_get_url(image):
 

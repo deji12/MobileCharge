@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stripe Subscription Checkout</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js" integrity="sha512-v2CJ7UaYy4JwqLDIrZUI/4hqeoQieOmAZNXBeQyjo21dadnwR+8ZaIJVT8EE2iyI61OV8e6M8PP2/4hpQINQ/g==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f9;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        .checkout-form {
+            background-color: white;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+            width: 300px;
+        }
+        h2 {
+            text-align: center;
+        }
+        input[type="text"], input[type="number"] {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+        }
+        button {
+            width: 100%;
+            padding: 10px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .error-message {
+            color: red;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="checkout-form">
+        <h2>Stripe Subscription Checkout</h2>
+        <form id="checkout" enctype="multipart/form-data">
+            <!-- Simple fields for subscription -->
+            <input type="text" id="plan_id" value="2" placeholder="Plan ID" required>
+            <button id="checkout-button">Checkout</button>
+            <div class="error-message" id="error-message"></div>
+        </form>
+    </div>
+
+    <script>
+        $(document).ready(function() {
+            $("#checkout").on('submit', function(event) {
+                event.preventDefault();
+
+                const errorMessage = $("#error-message");
+
+                // Create a FormData object to handle form submission
+                let formData = new FormData();
+                formData.append("plan_id", $("#plan_id").val());
+
+                $.ajax({
+                    url: "http://127.0.0.1:8000/api/payment/stripe/create-subscription/",
+                    method: "POST",
+                    contentType: false,  // Required for file upload
+                    processData: false,  // Required for file upload
+                    data: formData,
+                    success: function(data) {
+                        console.log("Success:", data);
+                        // Check if checkout_url is available in the response
+                        if (data.checkout_url) {
+                            window.location.href = data.checkout_url; // Redirect to Stripe checkout page
+                        } else {
+                            errorMessage.text('Checkout URL not found in response');
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        console.error("Error:", error);
+                        errorMessage.text("Error: " + error); // Display error message
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>

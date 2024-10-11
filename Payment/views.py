@@ -66,7 +66,7 @@ def get_pricing_plans(request):
 
 class StripeOneTimeCheckoutView(APIView):
 
-    # permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated]
 
     @swagger_auto_schema(
         operation_description="Create a Stripe one-time checkout session for a booking payment and generate an invoice.",
@@ -153,6 +153,8 @@ class StripeOneTimeCheckoutView(APIView):
         
 class StripeSubscriptionView(APIView):
 
+    permission_classes = [IsAuthenticated]
+
     @swagger_auto_schema(
         operation_description="Create a Stripe subscription checkout session for a recurring payment plan.",
         request_body=openapi.Schema(
@@ -205,9 +207,9 @@ class StripeSubscriptionView(APIView):
             try:
                 plan = PricingPlans.objects.get(id=int(plan_id))
                 
-            except Booking.DoesNotExist:
+            except PricingPlans.DoesNotExist:
                 return Response(
-                    {'error': 'Invalid booking_id'},
+                    {'error': 'Invalid plan_id'},
                     status=status.HTTP_400_BAD_REQUEST
                 )
             
@@ -219,14 +221,17 @@ class StripeSubscriptionView(APIView):
                         'quantity': 1,
                     },
                 ],
-                metadata = {
-                    'user_id': request.user.id,
-                    'plan_name': plan.title
+                subscription_data={
+                    'metadata': {
+                        'user_id': request.user.id,
+                        'user_email': request.user.email,
+                        'plan_name': plan.title
+                    }
                 },
                 payment_method_types=['card'],
                 mode='subscription',
-                success_url=settings.SITE_PURCHASE_SUCCESS_URL + '&?subscription_payment=successe&session_id={CHECKOUT_SESSION_ID}',
-                cancel_url=settings.SITE_PURCHASE_CANCEL_URL,
+                success_url=settings.SUBSCRIPTION_SUCCESS_URL + '&?subscription_payment=successe&session_id={CHECKOUT_SESSION_ID}',
+                cancel_url=settings.SUBSCRIPTION_CANCEL_URL,
             )
 
             # Return the checkout session URL
@@ -260,28 +265,30 @@ def stripe_webhook(request):
         print(f"Invalid signature: {str(e)}")
         return HttpResponse(status=400)
 
-    # Log the event type for further debugging
-    print(f"Event type: {event['type']}")
+    session = event['data']['object']
 
     if event['type'] == 'checkout.session.completed':
+
         # Process the session data
-        session = event['data']['object']
-        print(f"Session data: {json.dumps(session)}")
+        try:
 
-        booking_id = session['metadata']['booking_id']
+            booking_id = session['metadata']['booking_id']
+            booking = Booking.objects.get(int(booking_id))
 
-        user = User.objects.get(email=user_email)
+            user = booking.user
 
-        # create a new booking object and save it to the database
-        booking = Booking.objects.get(int(booking_id))
-        booking.paid = True
-        booking.save()
+            # create a new booking object and save it to the database
+            
+            booking.paid = True
+            booking.save()
 
-        # email user
-        EmailUser(email=user.email, booking=booking)
+            # email user
+            EmailUser(email=user.email, booking=booking)
 
-    elif event['type'] == 'customer.subscription.created' or event['type'] == 'customer.subscription.updated':
-        session = event['data']['object']
+        except KeyError:
+            pass
+
+    elif event['type'] == 'customer.subscription.updated':
 
         user_id = session['metadata']['user_id']
         plan_name = session['metadata']['plan_name']
@@ -296,18 +303,23 @@ def stripe_webhook(request):
         if subscription.plan != plan:
             subscription.plan = plan
 
-        subscription.status = 'Active'
+        subscription.status = 'active'
         subscription.expires_at = timezone.now() + timedelta(days=subscription_duration)
         subscription.stripe_subscription_id = session['id']
+        print(f'set session id: {session["id"]}')
 
         subscription.save()
         
         user.plan_type = plan_name
         user.save()
 
-        # Sending a subscription renewal email
-        EmailUser(email=user.email, subscription_renewed=True)
-
+        if created:
+            # Sending a subscription renewal email
+            EmailUser(email=user.email, subscription_thank_you=True)
+        
+        else:
+            EmailUser(email=user.email, subscription_renewed=True)
+            
     elif event['type'] == 'customer.subscription.deleted':
 
         session = event['data']['object']
@@ -315,7 +327,7 @@ def stripe_webhook(request):
 
         user = User.objects.get(id=int(user_id))
         subscription, created = Subscription.objects.get_or_create(user=user)
-        subscription.status = 'Canceled'
+        subscription.status = 'canceled'
 
         subscription.save()
 
@@ -334,6 +346,8 @@ def stripe_webhook(request):
 
 class CancelSubscriptionView(APIView):
     
+    permission_classes = [IsAuthenticated]
+
     @swagger_auto_schema(
         operation_description="Cancel a user's subscription.",
         responses={
@@ -364,10 +378,6 @@ class CancelSubscriptionView(APIView):
 
             # Cancel the subscription on Stripe
             stripe.Subscription.delete(subscription.stripe_subscription_id)
-
-            # Update the subscription status in your database
-            subscription.status = 'canceled'
-            subscription.save()
 
             return Response({'message': 'Subscription canceled successfully.'}, status=status.HTTP_200_OK)
 

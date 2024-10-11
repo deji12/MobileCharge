@@ -16,13 +16,13 @@ class PricingPlans(models.Model):
 
 class Subscription(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
-    plan = models.ForeignKey(PricingPlans, on_delete=models.CASCADE)
-    stripe_subscription_id = models.CharField(max_length=255, unique=True)
+    plan = models.ForeignKey(PricingPlans, on_delete=models.CASCADE, null=True, blank=True)
+    stripe_subscription_id = models.CharField(max_length=255, unique=True, null=True, blank=True)
     status = models.CharField(max_length=20, choices=[
         ('active', 'Active'),
         ('canceled', 'Canceled'),
         ('expired', 'Expired'),
         ('payment_failed', 'Payment Failed'),
-    ], default='active')
+    ], default='inactive')
     created_at = models.DateTimeField(auto_now_add=True)
     expires_at = models.DateTimeField(null=True, blank=True)
