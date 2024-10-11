@@ -16,6 +16,7 @@ from Payment.models import PricingPlans, Subscription
 from django.utils import timezone
 from datetime import datetime
 
+
 @swagger_auto_schema(
     method='post',
     operation_description="Create a new booking for a user. Fields such as location, car_make, battery_type, and vehicle_image are required.",
@@ -147,25 +148,32 @@ def create_booking(request):
 
 @swagger_auto_schema(
     method='get',
-    operation_description="Retrieve a list of bookings excluding completed ones. The response will be ordered by the most recent date.",
+    operation_description="Retrieve a list of bookings with the given status from the URL. The response will be ordered by the most recent date (descending). Acceptable statuses: Pending, Approved, Completed.",
     responses={
         200: openapi.Response(
             description="List of bookings",
             schema=BookingSerializer(many=True)
         ),
+        400: openapi.Response(description="Invalid booking status."),
         401: openapi.Response(description="Unauthorized"),
     },
-    operation_summary = "List bookings"
+    operation_summary="List bookings by status"
 )
 @permission_classes([IsAuthenticated])
 @api_view(["GET"])
-def get_bookings(request):
+def get_bookings(request, booking_status):
 
-    bookings = Booking.objects.filter(status="Pending").order_by("date")
-    serializer = BookingSerializer(bookings, many=True)
+    if booking_status not in ['Pending', 'Approved', 'Completed']:
+        return Response({"error": "Invalid booking status."}, status=status.HTTP_400_BAD_REQUEST)
+    
+    try:
+        bookings = Booking.objects.filter(status=booking_status).order_by("-date")  # Most recent first
+        serializer = BookingSerializer(bookings, many=True)
 
-    return Response(serializer.data, status=status.HTTP_200_OK)
-
+        return Response(serializer.data, status=status.HTTP_200_OK)
+    except Booking.DoesNotExist:
+        return Response({"error": "No bookings found for the given status."}, status=status.HTTP_404_NOT_FOUND)
+    
 @swagger_auto_schema(
     method='get',
     operation_description="Retrieve detailed information for a specific booking by its ID.",
