@@ -260,6 +260,7 @@ def update_booking_status(request, invoice_id):
         driver = Driver.objects.get(user=booking.driver)
 
         new_status = request.data.get("status")
+        print(new_status)
 
         if not new_status:
             return Response({"error": "Status is required"}, status=status.HTTP_400_BAD_REQUEST)
