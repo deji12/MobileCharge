@@ -149,7 +149,9 @@ class MyTokenObtainPairView(TokenObtainPairView):
                                 # 'vehicle_type': openapi.Schema(type=openapi.TYPE_STRING, description='Vehicle Type'),
                                 'is_active': openapi.Schema(type=openapi.TYPE_BOOLEAN, description='Is Active'),
                                 'is_superuser': openapi.Schema(type=openapi.TYPE_BOOLEAN, description='Is Superuser'),
-                                'date_joined': openapi.Schema(type=openapi.TYPE_STRING, format='date-time', description='Date Joined')
+                                'date_joined': openapi.Schema(type=openapi.TYPE_STRING, format='date-time', description='Date Joined'),
+                                'profile_image': openapi.Schema(type=openapi.TYPE_STRING, description='Profile Image Link'),
+                                'subscription_type': openapi.Schema(type=openapi.TYPE_STRING, description='Subscription Type')
                             }
                         )
                     }
