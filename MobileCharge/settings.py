@@ -212,11 +212,11 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 AUTH_USER_MODEL = 'Authentication.User'
 
 # Email Settings
-EMAIL_HOST = config('EMAIL_HOST')
-EMAIL_PORT = config('EMAIL_PORT', cast=int)
-EMAIL_USE_SSL = config('EMAIL_USE_SSL', cast=bool)
-EMAIL_HOST_USER = config('EMAIL_HOST_USER')
-EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD')
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 465
+EMAIL_USE_SSL = True
+EMAIL_HOST_USER = 'adesolaayodeji53@gmail.com'
+EMAIL_HOST_PASSWORD = 'qqlfvvutqgzealwz'
 
 # Cloudinary Settings
 CLOUDINARY_CLOUD_NAME = config('CLOUDINARY_CLOUD_NAME')

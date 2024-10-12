@@ -260,11 +260,12 @@ def update_booking_status(request, invoice_id):
         driver = Driver.objects.get(user=booking.driver)
 
         new_status = request.data.get("status")
-        print(new_status)
 
         if not new_status:
             return Response({"error": "Status is required"}, status=status.HTTP_400_BAD_REQUEST)
         
+        new_status = new_status.capitalize()
+
         # update driver stats accourdingly
         if new_status == "Pending":
             driver.number_of_pending_bookings += 1
@@ -272,12 +273,8 @@ def update_booking_status(request, invoice_id):
 
         elif new_status == "Approved":
 
-            print('Email about to be sent to------------------------')
-
             # make sure to only send email if user is not subscribed
             if not Subscription.objects.filter(user=booking.user, status='active').exists():
-
-                print("Email sent----------------------------------")
 
                 # send email to user
                 email_message = EmailMessage(
