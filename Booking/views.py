@@ -271,7 +271,7 @@ def update_booking_status(request, invoice_id):
             driver.number_of_pending_bookings += 1
             driver.number_of_completed_bookings -= 1
 
-        elif new_status == "Approved":
+        elif new_status == "Approved" and booking.status != "Approved":
 
             # make sure to only send email if user is not subscribed
             if not Subscription.objects.filter(user=booking.user, status='active').exists():
@@ -290,7 +290,7 @@ def update_booking_status(request, invoice_id):
                 # set booking as paid if user is a membership user
                 booking.paid = True
 
-        elif new_status == "Completed":
+        elif new_status == "Completed" and booking.status != "Completed":
             driver.number_of_pending_bookings -= 1
             driver.number_of_completed_bookings += 1
         
