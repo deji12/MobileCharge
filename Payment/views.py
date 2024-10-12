@@ -123,7 +123,7 @@ class StripeOneTimeCheckoutView(APIView):
                     {
                         'price_data': {
                             'currency': 'usd',
-                            'unit_amount': (booking.price * 100),  # Convert amount to cents
+                            'unit_amount': int(booking.price * 100),  # Convert amount to cents
                             'product_data': {
                                 'name': 'Visitor',
                                 'images': ['https://res.cloudinary.com/dqathrf7e/image/upload/v1728217409/logo.0430ece9704bdaedc044_xoulcl.png']
