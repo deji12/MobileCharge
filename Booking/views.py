@@ -221,13 +221,13 @@ def get_booking(request, booking_id):
         properties={
             'status': openapi.Schema(
                 type=openapi.TYPE_STRING,
-                enum=["Pending", "Completed"],  # Indicate the valid choices
+                enum=["Pending", "Completed", "Approved"],  # Indicate the valid choices
                 description="New status of the booking. Choices are 'Pending', 'Approved', or 'Completed'."
             )
         },
         required=['status'],
         example={
-            "status": "Pending"
+            "status": "Pending", 
         }
     ),
     responses={
