@@ -163,7 +163,7 @@ def create_booking(request):
 @api_view(["GET"])
 def get_bookings(request, booking_status):
 
-    if booking_status not in ['Pending', 'Approved', 'Completed']:
+    if booking_status.upper() not in ['Pending', 'Approved', 'Completed']:
         return Response({"error": "Invalid booking status."}, status=status.HTTP_400_BAD_REQUEST)
     
     try:
