@@ -163,7 +163,7 @@ def create_booking(request):
 @api_view(["GET"])
 def get_bookings(request, booking_status):
 
-    if booking_status.upper() not in ['Pending', 'Approved', 'Completed']:
+    if booking_status.lower() not in ['pending', 'approved', 'completed']:
         return Response({"error": "Invalid booking status."}, status=status.HTTP_400_BAD_REQUEST)
     
     try:
@@ -257,7 +257,7 @@ def update_booking_status(request, invoice_id):
     
     try:
         booking = Booking.objects.get(invoice_id=invoice_id)
-        driver = Driver.objects.get(driver=booking.driver)
+        driver = Driver.objects.get(user=booking.driver)
 
         new_status = request.data.get("status")
 
