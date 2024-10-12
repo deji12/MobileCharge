@@ -207,7 +207,7 @@ def get_bookings(request, booking_status):
 def get_booking(request, booking_id):
 
     try:
-        booking = Booking.objects.get(id=booking_id)
+        booking = Booking.objects.get(invoice_id=booking_id)
         serializer = BookingSerializer(booking)
         return Response(serializer.data, status=status.HTTP_200_OK)
     except:
