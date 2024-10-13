@@ -66,7 +66,7 @@ def get_pricing_plans(request):
 
 class StripeOneTimeCheckoutView(APIView):
 
-    permission_classes = [IsAuthenticated]
+    # permission_classes = [IsAuthenticated]
 
     @swagger_auto_schema(
         operation_description="Create a Stripe one-time checkout session for a booking payment and generate an invoice.",
@@ -104,7 +104,7 @@ class StripeOneTimeCheckoutView(APIView):
 
             if not (booking_id):
                 return Response(
-                    {'error': 'Missing required fields: plan_id and booking_id'},
+                    {'error': 'Missing required field: booking_id'},
                     status=status.HTTP_400_BAD_REQUEST
                 )   
 
@@ -125,7 +125,7 @@ class StripeOneTimeCheckoutView(APIView):
                             'currency': 'usd',
                             'unit_amount': int(booking.price * 100),  # Convert amount to cents
                             'product_data': {
-                                'name': 'Visitor',
+                                'name': 'EV Charge Visitor Checkout',
                                 'images': ['https://res.cloudinary.com/dqathrf7e/image/upload/v1728217409/logo.0430ece9704bdaedc044_xoulcl.png']
                             },
                         },
@@ -136,7 +136,7 @@ class StripeOneTimeCheckoutView(APIView):
                 },
                 payment_method_types=['card'],
                 mode='payment',
-                success_url=settings.SITE_PURCHASE_SUCCESS_URL + '&?success=true&session_id={CHECKOUT_SESSION_ID}',
+                success_url=settings.SITE_PURCHASE_SUCCESS_URL + '?success=true&booking_invoice_id=' + f'{booking.invoice_id}' + '&session_id={CHECKOUT_SESSION_ID}',
                 cancel_url=settings.SITE_PURCHASE_CANCEL_URL,
             )
 
@@ -273,7 +273,7 @@ def stripe_webhook(request):
         try:
 
             booking_id = session['metadata']['booking_id']
-            booking = Booking.objects.get(int(booking_id))
+            booking = Booking.objects.get(id=int(booking_id))
 
             user = booking.user
 

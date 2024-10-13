@@ -55,16 +55,8 @@
         <h2>Stripe Checkout</h2>
         <form action="POST" id="checkout" enctype="multipart/form-data">
             <!-- Dummy data fields except for the image input -->
-            <input type="text" id="plan_id" value="2" placeholder="Plan ID" required>
-            <input type="text" id="location" value="New York" placeholder="Location" required>
-            <input type="text" id="car_make" value="Tesla" placeholder="Car Make" required>
-            <input type="text" id="battery_type" value="Lithium-Ion" placeholder="Battery Type" required>
-            <input type="number" id="battery_level" value="80" placeholder="Battery Level (%)" required>
-            <input type="number" id="kilometers_left" value="100" placeholder="Kilometers Left" required>
-            <input type="text" id="description" value="Quick charge needed" placeholder="Description" required>
-            <input type="text" id="booking_type" value="Normal" placeholder="Booking Type" required>
-            <!-- Image upload field -->
-            <input type="file" id="vehicle_image" required>
+            <input type="text" id="booking_id" value="2" placeholder="Plan ID" required>
+            
             
             <button id="checkout-button">Checkout</button>
             <div class="error-message" id="error-message"></div>
@@ -80,15 +72,9 @@
 
                 // Create a FormData object to handle form submission with files
                 let formData = new FormData();
-                formData.append("plan_id", $("#plan_id").val());
-                formData.append("location", $("#location").val());
-                formData.append("car_make", $("#car_make").val());
-                formData.append("battery_type", $("#battery_type").val());
-                formData.append("battery_level", $("#battery_level").val());
-                formData.append("kilometers_left", $("#kilometers_left").val());
-                formData.append("description", $("#description").val());
-                formData.append("booking_type", $("#booking_type").val());
-                formData.append("vehicle_image", $("#vehicle_image")[0].files[0]); // Image file
+                formData.append("booking_id", $("#booking_id").val());
+                
+                //formData.append("vehicle_image", $("#vehicle_image")[0].files[0]); // Image file
 
                 $.ajax({
                     url: "http://127.0.0.1:8000/api/payment/stripe/create-checkout-session/",
