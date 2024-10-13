@@ -110,6 +110,9 @@ class StripeOneTimeCheckoutView(APIView):
 
             try:
                 booking = Booking.objects.get(id=int(booking_id))
+
+                if booking.paid:
+                    return Response({'error': 'Booking already paid for'}, status=status.HTTP_409_CONFLICT)
                 
             except Booking.DoesNotExist:
                 return Response(
