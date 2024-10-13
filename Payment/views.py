@@ -112,7 +112,7 @@ class StripeOneTimeCheckoutView(APIView):
                 booking = Booking.objects.get(id=int(booking_id))
 
                 if booking.paid:
-                    return Response({'error': 'Booking already paid for'}, status=status.HTTP_409_CONFLICT)
+                    return Response({'error': 'You have already made payment for this booking'}, status=status.HTTP_409_CONFLICT)
                 
             except Booking.DoesNotExist:
                 return Response(
@@ -209,6 +209,9 @@ class StripeSubscriptionView(APIView):
 
             try:
                 plan = PricingPlans.objects.get(id=int(plan_id))
+
+                if Subscription.objects.filter(user=request.user, plan=plan, status='active').exists():
+                    return Response({'error': 'You are already subscribed to this plan'}, status=status.HTTP_409_CONFLICT)
                 
             except PricingPlans.DoesNotExist:
                 return Response(
