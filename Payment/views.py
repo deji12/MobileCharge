@@ -66,7 +66,7 @@ def get_pricing_plans(request):
 
 class StripeOneTimeCheckoutView(APIView):
 
-    # permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated]
 
     @swagger_auto_schema(
         operation_description="Create a Stripe one-time checkout session for a booking payment and generate an invoice.",
