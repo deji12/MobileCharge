@@ -18,6 +18,7 @@ from Authentication.models import User
 import json
 from datetime import timedelta
 from django.utils import timezone
+from django.utils.timezone import now
 
 # This is your test secret API key.
 stripe.api_key = settings.STRIPE_SECRET_KEY
@@ -55,14 +56,32 @@ stripe.api_key = settings.STRIPE_SECRET_KEY
     operation_summary="Get all pricing plans"
 )
 @api_view(['GET'])
+@permission_classes([IsAuthenticated])
 def get_pricing_plans(request):
     """
-    Retrieves all available pricing plans from the system.
+    Retrieves all available pricing plans and marks the current plan if the user is subscribed.
     """
-
+    # Get all pricing plans
     plans = PricingPlans.objects.all()
-    serializer = PricingSerializer(plans, many=True)
-    return Response(serializer.data, status=status.HTTP_200_OK)
+
+    # Get the user's current active subscription
+    user_subscription = Subscription.objects.filter(
+        user=request.user, 
+        status='active', 
+        expires_at__gt=now()  # Subscription not expired
+    ).first()  # Assuming user can only have one active subscription at a time
+
+    # Serialize the plans and include "current" field
+    data = []
+    for plan in plans:
+        serialized_plan = PricingSerializer(plan).data
+        if user_subscription and user_subscription.plan == plan:
+            serialized_plan['current'] = True
+        else:
+            serialized_plan['current'] = False
+        data.append(serialized_plan)
+
+    return Response(data, status=status.HTTP_200_OK)
 
 class StripeOneTimeCheckoutView(APIView):
 
@@ -236,7 +255,7 @@ class StripeSubscriptionView(APIView):
                 },
                 payment_method_types=['card'],
                 mode='subscription',
-                success_url=settings.SUBSCRIPTION_SUCCESS_URL + '&?subscription_payment=successe&session_id={CHECKOUT_SESSION_ID}',
+                success_url=settings.SUBSCRIPTION_SUCCESS_URL + '?subscription_payment=successe&session_id={CHECKOUT_SESSION_ID}',
                 cancel_url=settings.SUBSCRIPTION_CANCEL_URL,
             )
 
@@ -293,6 +312,35 @@ def stripe_webhook(request):
 
         except KeyError:
             pass
+
+    elif event["type"] == 'customer.subscription.created':
+
+        user_id = session['metadata']['user_id']
+        plan_name = session['metadata']['plan_name']
+
+        user = User.objects.get(id=int(user_id))
+        plan = PricingPlans.objects.get(title=plan_name)
+        subscription_duration = 30
+
+        # get or create subscription fore user
+        subscription, created = Subscription.objects.get_or_create(user=user)
+
+        if subscription.plan != plan:
+            subscription.plan = plan
+
+        subscription.status = 'active'
+        subscription.expires_at = timezone.now() + timedelta(days=subscription_duration)
+        subscription.stripe_subscription_id = session['id']
+
+        subscription.save()
+        
+        user.plan_type = plan_name
+        user.save()
+
+        if created:
+            # Sending a subscription renewal email
+            EmailUser(email=user.email, subscription_thank_you=True)
+
 
     elif event['type'] == 'customer.subscription.updated':
 
