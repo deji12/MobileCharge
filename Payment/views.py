@@ -315,8 +315,6 @@ def stripe_webhook(request):
 
     elif event["type"] == 'customer.subscription.created':
 
-        print('subscription created -------------------------------------')
-
         user_id = session['metadata']['user_id']
         plan_name = session['metadata']['plan_name']
 
@@ -345,7 +343,6 @@ def stripe_webhook(request):
 
 
     elif event['type'] == 'customer.subscription.updated':
-        print('subscription updated -----------------------------')
 
         user_id = session['metadata']['user_id']
         plan_name = session['metadata']['plan_name']
