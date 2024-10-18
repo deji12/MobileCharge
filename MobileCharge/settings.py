@@ -33,6 +33,7 @@ DEBUG = config('DEBUG', cast=bool)
 ALLOWED_HOSTS = config('ALLOWED_HOSTS').split(',')
 
 CORS_ALLOWED_ORIGINS = config('CORS_ALLOWED_ORIGINS').split(',')
+CSRF_TRUSTED_ORIGINS = config('CSRF_TRUSTED_ORIGINS').split(',')
 
 CORS_ALLOW_HEADERS = list(default_headers) + [
     'x-api-key',
@@ -117,7 +118,7 @@ SIMPLE_JWT = {
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware', 
     'django.middleware.security.SecurityMiddleware',
-    'whitenoise.middleware.WhiteNoiseMiddleware',
+    # 'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -158,12 +159,14 @@ CHANNEL_LAYERS = {
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': config('DB_NAME'),  # The name of the database you created
+        'USER': config('DB_USER'),  # The username you created
+        'PASSWORD': config('DB_USER_PASSWORD'),  # The password for the user
+        'HOST': 'localhost',  # Assuming the database is on the same server
+        'PORT': '5432',  # Default PostgreSQL port
     }
 }
-
-DATABASES["default"] = dj_database_url.parse(config('DATABASE_URL'))
 
 # Password validation
 # https://docs.djangoproject.com/en/5.1/ref/settings/#auth-password-validators
@@ -201,7 +204,8 @@ USE_TZ = True
 
 STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR,  'staticfiles')
-# STATICFILES_STORAGE = "whitenoise.storage.CompresedManifestStaticFilesStorage"
+# STATICFILES_DIRS = (os.path.join(BASE_DIR, 'static'), )
+STATICFILES_STORAGE = "whitenoise.storage.CompresedManifestStaticFilesStorage"
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
@@ -212,11 +216,13 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 AUTH_USER_MODEL = 'Authentication.User'
 
 # Email Settings
-EMAIL_HOST = 'smtp.gmail.com'
-EMAIL_PORT = 465
-EMAIL_USE_SSL = True
-EMAIL_HOST_USER = 'adesolaayodeji53@gmail.com'
-EMAIL_HOST_PASSWORD = 'qqlfvvutqgzealwz'
+EMAIL_BACKEND = config('EMAIL_BACKEND')
+EMAIL_HOST = config('EMAIL_HOST')
+EMAIL_PORT = config('EMAIL_PORT', cast=int)
+EMAIL_USE_SSL = config('EMAIL_USE_SSL', cast=bool)
+EMAIL_HOST_USER = config('EMAIL_HOST_USER')
+EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD')
+DEFAULT_FROM_EMAIL = 'MobilCharge <info@mobilcharge.ca>'
 
 # Cloudinary Settings
 CLOUDINARY_CLOUD_NAME = config('CLOUDINARY_CLOUD_NAME')
@@ -234,3 +240,17 @@ CHECKOUT_URL = config('CHECKOUT_URL')
 
 SUBSCRIPTION_SUCCESS_URL = config('SUBSCRIPTION_SUCCESS_URL')
 SUBSCRIPTION_CANCEL_URL = config('SUBSCRIPTION_CANCEL_URL')
+
+
+
+# SERVER DETAILS
+
+# 162.0.213.114
+# PsTaI7g424Jr1xR5Zk
+
+'''
+
+db, admin email
+admin
+evchargeadmin321
+'''
